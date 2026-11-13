@@ -276,6 +276,12 @@ cmd_connect() {
     sleep 2
   done
   sleep 5
+  if [[ "$DRIVER" == kvm2 && -n "${POD_IP:-}" ]]; then
+    if ! minikube -p "$PROFILE" ssh -- "curl -sk -m 4 -o /dev/null https://${POD_IP}:5820/healthz" >/dev/null 2>&1; then
+      warn "The Minikube VM cannot reach the virtual kubelet at ${POD_IP}:5820, so 'kubectl logs/exec' will fail."
+      warn "On firewalld hosts (libvirt zone), allow it:  sudo firewall-cmd --policy libvirt-to-host --add-port=5820/tcp   (runtime only; see docs)"
+    fi
+  fi
   kubectl --context "$PROFILE" get nodes -o wide
   if ! kubectl --context "$PROFILE" get node interlink-node >/dev/null 2>&1; then
     warn 'Virtual node not visible yet. Inspect logs/interlink-vk.log and logs/interlink-tunnel.log.'
@@ -401,7 +407,9 @@ cmd_provider_up() {
   if virsh -c qemu:///system dominfo "$PROVIDER_VM_NAME" >/dev/null 2>&1; then die "VM '$PROVIDER_VM_NAME' already exists. Use provider-status or provider-down first."; fi
   mkdir -p "$STATE_DIR/provider"
   local base="$STATE_DIR/provider/ubuntu-cloud.img" user_data="$STATE_DIR/provider/user-data" meta_data="$STATE_DIR/provider/meta-data" key="$STATE_DIR/provider/provider_ed25519"
-  local provider_dir="${PROVIDER_VM_DIR:-/var/lib/libvirt/images/w3node}" disk="$provider_dir/${PROVIDER_VM_NAME}.qcow2" libvirt_base="$provider_dir/ubuntu-cloud.img"
+  # Two statements: inside a single `local a=.. b="$a"` the expansion runs before the assignment (set -u fails).
+  local provider_dir="${PROVIDER_VM_DIR:-/var/lib/libvirt/images/w3node}"
+  local disk="$provider_dir/${PROVIDER_VM_NAME}.qcow2" libvirt_base="$provider_dir/ubuntu-cloud.img"
   if [[ ! -f "$base" ]]; then
     log "Downloading Ubuntu cloud image: $UBUNTU_CLOUD_IMAGE_URL"
     curl -fL "$UBUNTU_CLOUD_IMAGE_URL" -o "$base"
@@ -428,15 +436,28 @@ apt:
     ubuntu-universe:
       source: "deb http://archive.ubuntu.com/ubuntu \$RELEASE universe"
 packages:
-  - htcondor
+  - condor
   - apptainer
   - openssh-server
+  - prometheus-node-exporter
 write_files:
   - path: /usr/local/bin/singularity
     permissions: '0755'
     content: |
       #!/bin/sh
       exec /usr/bin/apptainer "\$@"
+  # Ubuntu 24.04+ restricts unprivileged user namespaces via AppArmor and the archive's apptainer ships
+  # no profile for them, so `apptainer exec` fails with "Operation not permitted". Allow it for the starter.
+  - path: /etc/apparmor.d/apptainer
+    permissions: '0644'
+    content: |
+      abi <abi/4.0>,
+      include <tunables/global>
+
+      profile apptainer /usr/lib/x86_64-linux-gnu/apptainer/bin/starter flags=(unconfined) {
+        userns,
+        include if exists <local/apptainer>
+      }
   - path: /etc/condor/config.d/01-w3node-provider.conf
     permissions: '0644'
     content: |
@@ -453,7 +474,9 @@ write_files:
       ALLOW_NEGOTIATOR = *
       ALLOW_DAEMON = *
 runcmd:
+  - [apparmor_parser, -r, /etc/apparmor.d/apptainer]
   - [systemctl, enable, --now, ssh]
+  - [systemctl, enable, --now, prometheus-node-exporter]
   - [systemctl, enable, --now, condor]
   - [systemctl, restart, condor]
 final_message: "W3Node provider VM initialized."
@@ -489,7 +512,7 @@ META
   log 'Provider VM created. Waiting for DHCP lease and cloud-init.'
   for _ in $(seq 1 90); do
     local ip; ip="$(provider_ip || true)"
-    if [[ -n "$ip" ]] && ssh -i "$key" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=3 "${PROVIDER_VM_USER}@${ip}" 'cloud-init status --wait >/dev/null 2>&1 && systemctl is-active --quiet condor' 2>/dev/null; then
+    if [[ -n "$ip" ]] && ssh -i "$key" -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=accept-new -o ConnectTimeout=3 "${PROVIDER_VM_USER}@${ip}" 'cloud-init status --wait >/dev/null 2>&1 && systemctl is-active --quiet condor' 2>/dev/null; then
       echo "Provider VM: ${PROVIDER_VM_USER}@${ip}"
       echo "SSH: ssh -i '$key' ${PROVIDER_VM_USER}@${ip}"
       echo "Public egress IP to allowlist on pool host: $(curl -4 -fsS https://api.ipify.org || echo unknown)"
@@ -510,13 +533,13 @@ cmd_provider_ip() {
 cmd_provider_ssh() {
   local ip; ip="$(provider_ip || true)"
   [[ -n "$ip" ]] || die 'Provider VM IP not found.'
-  exec ssh -i "$STATE_DIR/provider/provider_ed25519" -o StrictHostKeyChecking=accept-new "${PROVIDER_VM_USER}@${ip}"
+  exec ssh -i "$STATE_DIR/provider/provider_ed25519" -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=accept-new "${PROVIDER_VM_USER}@${ip}"
 }
 
 cmd_provider_status() {
   local ip; ip="$(provider_ip || true)"
   [[ -n "$ip" ]] || die 'Provider VM IP not found.'
-  ssh -i "$STATE_DIR/provider/provider_ed25519" -o StrictHostKeyChecking=accept-new "${PROVIDER_VM_USER}@${ip}" \
+  ssh -i "$STATE_DIR/provider/provider_ed25519" -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=accept-new "${PROVIDER_VM_USER}@${ip}" \
     'cloud-init status --long; systemctl is-active condor; apptainer --version; condor_status -af Machine Name State HasSingularity'
 }
 

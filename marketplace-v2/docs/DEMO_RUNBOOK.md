@@ -95,3 +95,15 @@ by `infrastructure/scripts/create-tunnel-user.sh`: pinned host key + permitted p
 local end), a wrong pinned host key is refused, a forward to any other port is blocked, and the account has no
 shell. Found and fixed: user-level `ControlMaster auto` in `~/.ssh/config` made the forward outlive the script and
 bypass host-key pinning; the scripts now pass `-o ControlMaster=no -o ControlPath=none -o ControlPersist=no`.
+
+## KVM2 / provider VM verification (host with Docker + firewalld)
+
+- `demo-laptop.sh prepare` works end to end with the kvm2 driver (virtual node Ready, workload ran through the SSH tunnel).
+- On a host that also runs Docker, libvirt VMs have no Internet and cannot reach the host: Docker's FORWARD policy is
+  DROP, and firewalld's `libvirt` zone rejects everything but DHCP/DNS/SSH/TFTP. Run
+  `sudo infrastructure/scripts/libvirt-docker-firewall.sh apply` (runtime only; `undo` removes it).
+- Provider cloud-init bugs found and fixed: HTCondor is `condor` (not `htcondor`) on Ubuntu 26.04;
+  unprivileged Apptainer needs an AppArmor userns profile on Ubuntu 24.04+; node_exporter added for Grafana;
+  `provider-up` aborted on an unbound variable.
+- Image choice: Alpine has no HTCondor package and Debian has no Apptainer; Ubuntu 26.04 has condor, apptainer
+  and prometheus-node-exporter in one archive.
