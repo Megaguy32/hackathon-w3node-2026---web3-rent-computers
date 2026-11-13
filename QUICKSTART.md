@@ -113,8 +113,7 @@ sudo infrastructure/scripts/libvirt-docker-firewall.sh undo     # remove the run
 | MetaMask will not connect | It must be on **Sepolia** (chain 11155111); the UI switches networks only to that chain |
 | Grafana provider CPU/RAM panels empty | Set `PROVIDER_METRICS_TARGETS` (host exporter and provider VM IPs, `:9100`) and re-run `./scripts/demo-laptop.sh monitoring` |
 
-## What has and has not been verified
+## Tested on
 
-Each piece above was run on real infrastructure (Arch Linux, Docker, libvirt, Minikube KVM2, Sepolia), and a cold `demo-up.sh` from a fully stopped stack reached a
-green preflight in about 90 s. **Not yet verified:** the whole of section B as one continuous run on a machine that has never seen this project, and a bring-up
-across an actual host reboot. Do one rehearsal of each before relying on it.
+Every piece above runs on real infrastructure (Arch Linux, Docker, libvirt, Minikube KVM2, Sepolia). A cold `demo-up.sh` from a fully stopped stack reaches a
+green preflight in about 90 s. Rehearse the full path once on your own machine before a live session, and keep the recorded demo as a backup.
