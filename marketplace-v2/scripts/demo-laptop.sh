@@ -211,13 +211,22 @@ cmd_build_interlink() {
   log 'Built bin/interlink and bin/vk.'
 }
 
-pid_alive() { [[ -f "$PID_DIR/$1.pid" ]] && kill -0 "$(cat "$PID_DIR/$1.pid")" 2>/dev/null; }
+# A pidfile can outlive a reboot, and its PID may now belong to an unrelated process; only treat the PID as
+# ours if its command line still contains the script we started (recorded in <name>.cmd).
+pid_alive() {
+  local pf="$PID_DIR/$1.pid" cf="$PID_DIR/$1.cmd" pid
+  [[ -f "$pf" ]] || return 1
+  pid="$(cat "$pf")"; kill -0 "$pid" 2>/dev/null || return 1
+  [[ -f "$cf" ]] || return 0   # pidfile from an older version: keep the previous behaviour
+  tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null | grep -qF -- "$(cat "$cf")"
+}
 start_bg() {
   local name="$1"; shift
   if pid_alive "$name"; then log "$name already running (PID $(cat "$PID_DIR/$name.pid"))."; return; fi
   local logfile="$LOG_DIR/$name.log"
   nohup "$@" >>"$logfile" 2>&1 </dev/null &
   echo "$!" > "$PID_DIR/$name.pid"
+  basename -- "${@: -1}" > "$PID_DIR/$name.cmd"
   sleep 2
   if ! kill -0 "$(cat "$PID_DIR/$name.pid")" 2>/dev/null; then
     tail -80 "$logfile" >&2 || true
@@ -229,9 +238,9 @@ stop_bg() {
   local name="$1" pidfile="$PID_DIR/$1.pid"
   if [[ -f "$pidfile" ]]; then
     local pid; pid="$(cat "$pidfile")"
-    kill "$pid" 2>/dev/null || true
+    if pid_alive "$1"; then kill "$pid" 2>/dev/null || true; fi   # never signal a recycled PID
     for _ in $(seq 1 10); do kill -0 "$pid" 2>/dev/null || break; sleep 1; done
-    rm -f "$pidfile"
+    rm -f "$pidfile" "$PID_DIR/$name.cmd"
     log "Stopped $name."
   fi
 }
@@ -474,6 +483,8 @@ write_files:
       USE_SHARED_PORT = True
       SINGULARITY = /usr/bin/apptainer
       DAEMON_LIST = MASTER, STARTD, SHARED_PORT
+      # Re-advertise quickly so a restarted pool sees this provider within seconds, not the 5-minute default.
+      UPDATE_INTERVAL = 20
       SEC_DEFAULT_AUTHENTICATION = OPTIONAL
       SEC_DEFAULT_AUTHENTICATION_METHODS = CLAIMTOBE
       ALLOW_READ = *
