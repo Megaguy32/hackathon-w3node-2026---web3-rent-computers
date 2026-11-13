@@ -1,54 +1,83 @@
 # Web3 Rent Computers
 
-W3Node 2026 Hackathon
-- Member: Ethan Le Roux (`Megaguy32`) - Programmer
-- Track: Real World Assets (RWA)
-- Idea: Tokenize computers, rent computation
+**Rent idle computers on Ethereum and run your Kubernetes workloads on them.**
+A provider lists a machine on-chain, a consumer pays for it with a wallet, and a Kubernetes Pod runs on *exactly that machine*
+(Ethereum → interLink → HTCondor → Apptainer). W3Node 2026 Hackathon · Track: Real World Assets (RWA) · Ethan Le Roux (`Megaguy32`)
 
-## Problem Statement
-Cloud compute in Africa is expensive and high-latency because servers sit overseas and bill in USD. Meanwhile, local PCs, gaming rigs, and lab computers sit idle for hours every day. This project tokenizes physical computers on-chain so owners can rent out spare computation directly.
+> Demo video: _add link here_ · Quickstart: [QUICKSTART.md](QUICKSTART.md)
 
-## Target Users in Africa
-- Providers: PC owners, Computer labs.
+## Why
 
-- Renters: Local developers, Cluster administrators, service owners in need of scale, AI/3D builders needing cheap compute without credit cards or credit checks.
+Cloud compute in Africa is expensive and high-latency: servers sit overseas and bill in USD. Meanwhile local PCs, gaming rigs and lab
+computers sit idle for hours every day. This project turns that idle hardware into rentable, on-chain-priced compute, with no credit card
+and no credit check, usable from the Kubernetes tooling people already have.
 
-## Core Features
-- Hardware Tokenization (ERC-721): Token correlates to a physical computer and records its specs and hourly rate.
+**Providers:** PC owners, computer labs. **Renters:** local developers, cluster administrators, AI/3D builders who need cheap compute.
 
-- Escrow Rental: Smart contract locks the renter's payment for the booked hours.
+## How it works
 
-- Container Access: Host daemon spins up an isolated Docker or SSH session during an active lease.
+```mermaid
+flowchart LR
+  P["Provider machine<br/>HTCondor + Apptainer"] -->|advertises| Pool["Pool host<br/>marketplace UI · indexer · plugin"]
+  Pool -->|lists| C(("Ethereum Sepolia<br/>marketplace contract"))
+  Consumer["Consumer<br/>wallet + kubectl"] -->|"1. rent (pays provider)"| C
+  C -->|"2. RentalCreated event"| Pool
+  Consumer -->|"3. Pod + rental ID"| K["Kubernetes<br/>interLink virtual node"]
+  K -->|"4. SSH tunnel"| Pool
+  Pool -->|"5. job pinned to the rented machine"| P
+```
 
-- Uptime Settlement: Contract pays the host owner on completion or refunds the renter on downtime.
+1. The provider machine joins an HTCondor pool and is **listed on-chain** with a price and duration.
+2. A consumer **rents it** from the marketplace UI (one wallet transaction, paid straight to the provider).
+3. The marketplace indexes the rental. The consumer submits a normal **Pod annotated with the rental ID** to Kubernetes.
+4. interLink forwards the Pod to a patched HTCondor plugin that **validates the rental and pins the job** to the rented machine.
+5. The provider runs it in an Apptainer container; logs and status flow back to `kubectl`.
 
-## Track Alignment (Real World Assets)
-Regarding the context of Real World Assets, a physical computer is tangible hardware that does measurable work. Linking a machine's specs and rental leases to a smart contract pragmatically turns idle hardware into an on-chain asset.
+## What is built (and verified)
 
-## Status
+Demonstrated end to end on **Ethereum Sepolia**, on one laptop with real VMs. Everything below was run, not mocked.
 
-The hackathon prototype is built and was demonstrated end to end on Ethereum Sepolia: a provider machine is listed
-on-chain, a consumer rents it with a wallet, and a Kubernetes Pod runs on exactly that machine
-(interLink -> HTCondor -> Apptainer), observed in Grafana, Cockpit and a live marketplace view.
-The demo listings have been deactivated, so nothing is currently for rent.
+| Area | Status |
+|---|---|
+| Marketplace contract (list, update, rent, direct payment) | Deployed and exercised on Sepolia; Foundry tests |
+| Go indexer + web UI + **Live view** (machine tiles, on-chain feed) | Working; unit tests |
+| Patched `interlink-htcondor-plugin` (rental validation, provider pinning) | Verified against the real upstream plugin and a real HTCondor pool |
+| Pinning across two real providers (container + KVM VM) | Verified: the job ran only on the rented machine |
+| Kubernetes consumer (Minikube KVM2) through an SSH tunnel | Working |
+| Observability: Grafana fleet counters (ready / pending / live), CPU and RAM, Cockpit VM view | Working |
+| Reboot-proof bring-up (`scripts/demo-up.sh`) | Cold bring-up from a fully stopped stack in ~90 s; **not yet tested across a real host reboot** |
+| Scripted, recorded demo (`demo/`) | Working |
+
+## Quickstart
+
+```bash
+cd marketplace-v2 && ./scripts/check.sh                               # Go tests, plugin patcher tests, syntax checks (no infrastructure)
+forge install foundry-rs/forge-std && forge test -vv                  # original contract, from the repo root
+```
+
+The full single-laptop demo (Minikube + provider VMs + Sepolia) is in **[QUICKSTART.md](QUICKSTART.md)**.
+
+## Repository map
 
 | Path | What it is |
 |---|---|
-| `contracts/ComputerRWA.sol`, `test/` | The original concept contract (tokenised machines with escrow), with Foundry tests |
-| `marketplace-v2/` | The working implementation: marketplace contract, Go indexer/UI, patched interLink plugin, demo tooling, docs |
-| `marketplace-v2/docs/` | Architecture, runbooks, reboot-proof bring-up, security notes |
+| `contracts/ComputerRWA.sol`, `test/` | The original concept contract: tokenised machines with escrow |
+| `marketplace-v2/` | The working implementation: contract, Go indexer/UI, plugin patcher, scripts, demo tooling |
+| `marketplace-v2/docs/` | Architecture, manual deployment, reboot-proof bring-up, demo runbooks, security notes |
+| `QUICKSTART.md` | Zero-to-demo guide, plus troubleshooting from real failures |
 
-Tests: `forge test` (root), and `cd marketplace-v2 && ./scripts/check.sh`.
-Note: the CI workflow for these checks still needs to be added at `.github/workflows/`.
+## Concept: where this is heading
 
-## Working implementation (marketplace-v2)
+The original design (kept in `contracts/ComputerRWA.sol`) goes further than the prototype: an ERC-721 token per physical computer recording its
+specs and hourly rate, **escrowed** payment for the booked hours, container/SSH access during the lease, and **uptime-based settlement**
+(pay the owner on completion, refund the renter on downtime). `marketplace-v2` deliberately skips escrow, staking and tokenomics to prove the hard
+part first: *a wallet payment really results in a workload running on a specific machine.* A real-world asset here is tangible hardware that does
+measurable work; linking a machine's specs and leases to a contract turns idle hardware into an on-chain asset.
 
-`marketplace-v2/` is a runnable, tested implementation of the rental flow: a Solidity
-marketplace contract on Ethereum Sepolia, a Go + htmx marketplace UI/indexer, and a patched
-`interlink-htcondor-plugin` that pins a Kubernetes Pod to the machine a wallet rented.
-It was rehearsed end to end on Sepolia (MetaMask rent -> Kubernetes pod via interLink ->
-HTCondor/Apptainer job on the rented machine -> Grafana). See
-`marketplace-v2/docs/DEMO_RUNBOOK.md` for the checklist, results and known gaps.
+## Limits (read before relying on it)
 
-Note: v2 deliberately has no escrow, ERC-721 tokenization or uptime settlement (the payment goes
-straight to the provider). Those remain the design goals above and live in `contracts/ComputerRWA.sol`.
+- Demo-grade security: the HTCondor pool uses `CLAIMTOBE` authentication on a trusted network; workloads are trusted. See
+  [marketplace-v2/docs/SECURITY_AND_LIMITATIONS.md](marketplace-v2/docs/SECURITY_AND_LIMITATIONS.md).
+- No escrow or refunds in `marketplace-v2`; overlapping rentals of one machine are possible; nothing proves a provider controls the machine it lists.
+- Sepolia testnet only. The contract is unaudited.
+- The demo listings from the hackathon have been deactivated, so nothing is currently for rent.
