@@ -54,7 +54,7 @@ Laptop consumer cluster (KVM2 Minikube):
   prepare                Run up, build-interlink and connect in sequence
   disconnect             Stop laptop-side interLink/tunnel processes
   marketplace-ui         SSH-forward the remote marketplace UI to localhost:${MARKETPLACE_UI_LOCAL_PORT}
-  run <rental-id>         Render and apply the demo Pod with the specified rental ID
+  run <rental-id> [demo|load]  Render and apply a Pod for the rental ('load' burns CPU/RAM for Grafana)
   status                 Show Minikube, virtual node and demo Pod status
   logs [pod]             Fetch demo Pod logs
   watch                  Watch Pod status (Ctrl-C to stop)
@@ -304,10 +304,15 @@ cmd_marketplace_ui() {
 
 cmd_run() {
   need kubectl; need python3
-  local rental_id="${1:-}"
-  [[ -n "$rental_id" ]] || die "Usage: $0 run <rental-id>"
+  local rental_id="${1:-}" workload="${2:-demo}" src pod
+  [[ -n "$rental_id" ]] || die "Usage: $0 run <rental-id> [demo|load]"
   [[ "$rental_id" =~ ^[0-9]+$ ]] || die 'Rental ID must be a non-negative integer.'
-  local src="$ROOT/examples/compute-pod.yaml" dst="$RENDER_DIR/compute-pod-${rental_id}.yaml"
+  case "$workload" in
+    demo) src="$ROOT/examples/compute-pod.yaml"; pod=w3node-compute-demo ;;
+    load) src="$ROOT/examples/compute-pod-load.yaml"; pod=w3node-compute-load ;;
+    *) die "Unknown workload '$workload' (use demo or load)." ;;
+  esac
+  local dst="$RENDER_DIR/${pod}-${rental_id}.yaml"
   RENTAL_ID="$rental_id" SOURCE_MANIFEST="$src" TARGET_MANIFEST="$dst" python3 - <<'PY'
 import os, re, pathlib
 source = pathlib.Path(os.environ['SOURCE_MANIFEST']).read_text()
@@ -319,9 +324,9 @@ pathlib.Path(os.environ['TARGET_MANIFEST']).write_text(updated)
 PY
   log "Applying workload for rental $rental_id"
   # A finished Pod with the same name would never be resubmitted, so start clean.
-  kubectl --context "$PROFILE" delete pod w3node-compute-demo --ignore-not-found --wait=true
+  kubectl --context "$PROFILE" delete pod "$pod" --ignore-not-found --wait=true
   kubectl --context "$PROFILE" apply -f "$dst"
-  kubectl --context "$PROFILE" get pod w3node-compute-demo -o wide || true
+  kubectl --context "$PROFILE" get pod "$pod" -o wide || true
   echo "Rendered manifest: $dst"
 }
 
@@ -346,8 +351,23 @@ cmd_monitoring() {
   log 'Installing kube-prometheus-stack into the local Minikube consumer cluster.'
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null 2>&1 || true
   helm repo update >/dev/null
+  # PROVIDER_METRICS_TARGETS="host:9100,host2:9100": node_exporter endpoints on the rented provider
+  # machines (the workload runs there, not in Minikube). They feed the dashboard's CPU/RAM panels.
+  local values="$STATE_DIR/monitoring-values.yaml"
+  PROVIDER_METRICS_TARGETS="${PROVIDER_METRICS_TARGETS:-}" python3 - "$values" <<'PY'
+import os, sys
+targets = [t.strip() for t in os.environ.get("PROVIDER_METRICS_TARGETS", "").split(",") if t.strip()]
+lines = ["prometheus:", "  prometheusSpec:"]
+if targets:
+    lines += ["    additionalScrapeConfigs:", "      - job_name: w3node-provider", "        scrape_interval: 5s",
+              "        static_configs:", "          - targets:"]
+    lines += [f"              - '{t}'" for t in targets]
+else:
+    lines += ["    {}"]
+open(sys.argv[1], "w").write("\n".join(lines) + "\n")
+PY
   helm upgrade --install w3node-observability prometheus-community/kube-prometheus-stack \
-    --kube-context "$PROFILE" --namespace monitoring --create-namespace \
+    --kube-context "$PROFILE" --namespace monitoring --create-namespace -f "$values" \
     --set grafana.adminPassword="$GRAFANA_ADMIN_PASSWORD" \
     --set grafana.sidecar.dashboards.label=grafana_dashboard \
     --set-string grafana.sidecar.dashboards.labelValue=1 \
