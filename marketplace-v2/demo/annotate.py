@@ -8,6 +8,7 @@ demo/out/timeline.json, mapped through the same speed-up rules as demo/edit.py, 
 
   python demo/annotate.py                  # -> demo/out/demo-60s-annotated.mp4
   python demo/annotate.py --stills         # PNG stills at key moments, for review
+  python demo/annotate.py --no-zoom        # same annotations, full 2x2 view, no camera moves
 
 Needs: ffmpeg/ffprobe, python3 with pillow + numpy. Ring coordinates are in source pixels (1920x1200).
 """
@@ -192,7 +193,10 @@ def main():
     ap.add_argument("--timeline", default=str(HERE / "out/timeline.json"))
     ap.add_argument("--out", default=str(HERE / "out/demo-60s-annotated.mp4"))
     ap.add_argument("--stills", action="store_true")
+    ap.add_argument("--no-zoom", action="store_true", help="keep the full 2x2 view; only rings, captions and badges")
     a = ap.parse_args()
+    if a.no_zoom and a.out.endswith("demo-60s-annotated.mp4"):
+        a.out = a.out.replace("annotated.mp4", "annotated-nozoom.mp4")
 
     tl, segs = load_timeline(a.timeline)
     s2o = make_mapper(segs)
@@ -200,11 +204,12 @@ def main():
     htc = next(s for s in segs if s["label"] == "type: HTCondor placement")
     M["htc"] = htc["o0"]
     cam, rings, caps = build_story(M)
+    if a.no_zoom: cam = cam[:1]
     fast_ranges = [(s["o0"], s["o1"], s["speed"]) for s in segs if s["mode"] == "fast" and s["o1"] - s["o0"] > 1.5]
     print("marks (output s):", {k: round(v, 1) for k, v in M.items()})
 
     if a.stills:
-        outdir = HERE / "out/annotated-stills"; outdir.mkdir(parents=True, exist_ok=True)
+        outdir = HERE / ("out/annotated-nozoom-stills" if a.no_zoom else "out/annotated-stills"); outdir.mkdir(parents=True, exist_ok=True)
         for t in [0.8, 5, M["tile_ready"] + 2, M["listing_visible"] + 1.5, M["rental_visible"] + 1, M["tile_live"] + 1.5,
                   M["tile_live"] + 6, M["tile_live"] + 12, M["htc"] + 1.2, M["done"] + 1.0, 58]:
             raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-ss", f"{t:.3f}", "-i", a.video, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],

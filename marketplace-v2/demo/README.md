@@ -70,6 +70,7 @@ Open `scenes.html?scene=3&t=10` in a browser to preview any scene at any time. E
 pip install pillow numpy
 python demo/annotate.py --stills   # review stills in demo/out/annotated-stills/
 python demo/annotate.py            # -> demo/out/demo-60s-annotated.mp4
+python demo/annotate.py --no-zoom  # same rings and captions, full 2x2 view -> demo-60s-annotated-nozoom.mp4
 ```
 
 Ring coordinates are in source pixels of the 1920x1200 recording; adjust them in `build_story()` if you re-record with a different layout.
