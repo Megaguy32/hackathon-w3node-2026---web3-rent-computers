@@ -1,0 +1,7 @@
+# Tests: `forge install foundry-rs/forge-std` once (lib/ is git-ignored), then `forge test -vv`.
+[profile.default]
+src = "contracts"
+test = "test"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.24"
