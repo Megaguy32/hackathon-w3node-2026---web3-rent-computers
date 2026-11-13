@@ -1,0 +1,30 @@
+# Secrets and local configuration
+.env
+.demo-laptop.env
+contracts/.env
+*.pem
+*.key
+
+# Local demo runtime
+.demo-state/
+*.log
+marketplace/data/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Foundry
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/lib/
+
+# Local builds
+marketplace/marketplace
+interLink/
+
+.sepolia-rehearsal.env
+
+# demo recordings and timelines
+demo/out/

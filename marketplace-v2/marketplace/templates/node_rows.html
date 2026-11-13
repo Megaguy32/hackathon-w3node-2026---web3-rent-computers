@@ -1,0 +1,9 @@
+{{if .NodeError}}
+  <p class="notice warning">HTCondor unavailable: {{.NodeError}}</p>
+{{else if not .Nodes}}
+  <p class="muted">No HTCondor execution nodes were returned.</p>
+{{else}}
+  <div class="table-wrap"><table><thead><tr><th>Machine</th><th>State</th><th>CPU</th><th>Memory</th><th>Apptainer</th><th>Can list</th></tr></thead><tbody>
+  {{range .Nodes}}<tr><td><code>{{.Machine}}</code></td><td>{{.State}}</td><td>{{.CPUs}}</td><td>{{.MemoryMiB}} MiB</td><td>{{if .HasApptainer}}Yes{{else}}No / unknown{{end}}</td><td>{{if .Available}}<span class="pill good">Available</span>{{else}}<span class="pill">Busy / unsupported</span>{{end}}</td></tr>{{end}}
+  </tbody></table></div>
+{{end}}

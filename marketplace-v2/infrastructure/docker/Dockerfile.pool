@@ -1,0 +1,30 @@
+# W3Node pool host in one container: HTCondor (collector, negotiator, schedd, optional local startd),
+# the patched interlink-htcondor-plugin, and the marketplace backend/UI. Build context: the project root.
+#   docker compose -f infrastructure/docker/compose.yaml build pool
+ARG PLUGIN_REF=5f9ecdb2d213932eb5c72b7f975ec405ad4548d4
+
+FROM golang:1.23-bookworm AS marketplace
+WORKDIR /src
+COPY marketplace/ ./
+RUN CGO_ENABLED=0 go build -trimpath -o /out/marketplace .
+
+# Base pinned by digest (HTCondor 25.x on AlmaLinux 9, already ships apptainer).
+FROM htcondor/mini@sha256:03e54ba7f1e0819f4f17dc54942b0b8950e1e1a0db199c509c2124168c86dc50
+ARG PLUGIN_REF
+USER root
+RUN dnf -y install git python3-pip util-linux && pip3 install --no-cache-dir flask pyyaml requests && dnf clean all
+RUN useradd -m -u 1002 plug && useradd -r -m -u 1003 w3node
+# Upstream plugin at a pinned commit; the patcher fails closed if the upstream anchors moved.
+RUN git clone https://github.com/interlink-hq/interlink-htcondor-plugin.git /opt/plugin \
+ && git -C /opt/plugin checkout --detach ${PLUGIN_REF}
+COPY plugin/apply_patch.py /tmp/apply_patch.py
+RUN python3 /tmp/apply_patch.py /opt/plugin && python3 -m py_compile /opt/plugin/handles.py && rm /tmp/apply_patch.py
+COPY plugin/SidecarConfig.yaml /opt/plugin/SidecarConfig.yaml
+RUN mkdir -p /var/lib/w3node-interlink/jobs /run/w3node /var/lib/w3node-marketplace \
+ && chmod 1777 /var/lib/w3node-interlink/jobs && chmod 0777 /run/w3node \
+ && chown -R plug:plug /opt/plugin && chown -R w3node:w3node /var/lib/w3node-marketplace
+COPY infrastructure/htcondor/ /opt/w3node/htcondor/
+COPY --from=marketplace /out/marketplace /usr/local/bin/w3node-marketplace
+COPY infrastructure/docker/pool-entrypoint.sh /usr/local/bin/pool-entrypoint.sh
+RUN chmod +x /usr/local/bin/pool-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/pool-entrypoint.sh"]

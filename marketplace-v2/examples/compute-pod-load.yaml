@@ -1,0 +1,43 @@
+# Visible-load variant of the demo workload: ~45 s of CPU burn on 4 workers plus ~512 MiB of RAM,
+# so the Grafana CPU/RAM panels for the rented provider machine visibly move.
+# Run with: ./scripts/demo-laptop.sh run <rental-id> load
+apiVersion: v1
+kind: Pod
+metadata:
+  name: w3node-compute-load
+  namespace: default
+  annotations:
+    marketplace.w3node.io/rental-id: "1" # The demo script replaces this with the active rental ID.
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: interlink-node
+  tolerations:
+    - key: virtual-node.interlink/no-schedule
+      operator: Exists
+  containers:
+    - name: load
+      image: docker://alpine:3.20
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "Rental ID: ${W3NODE_RENTAL_ID:-unknown} on $(hostname)"
+          echo "Start UTC: $(date -u +%H:%M:%S)"
+          # CPU: 4 busy loops for 45 s (saturates a 2-vCPU provider).
+          for i in 1 2 3 4; do ( end=$(( $(date +%s) + 45 )); while [ "$(date +%s)" -lt "$end" ]; do :; done ) & done
+          # RAM: hold ~512 MiB (awk builds a 2^29-byte string) for 45 s.
+          awk 'BEGIN { s = "x"; for (i = 0; i < 29; i++) s = s s; print "allocated", length(s), "bytes"; system("sleep 45") }' &
+          wait
+          echo "End UTC: $(date -u +%H:%M:%S)"
+      env:
+        - name: W3NODE_RENTAL_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['marketplace.w3node.io/rental-id']
+      resources:
+        requests:
+          cpu: "2"
+          memory: "1Gi"
+        limits:
+          cpu: "2"
+          memory: "1Gi"

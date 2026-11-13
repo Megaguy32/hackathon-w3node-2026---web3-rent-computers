@@ -1,0 +1,12 @@
+# Replace PROVIDER_MACHINE with the exact Machine ClassAd shown by condor_status.
+universe = vanilla
+executable = run-apptainer.sh
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+request_cpus = 1
+request_memory = 256MB
+requirements = (TARGET.Machine == "PROVIDER_MACHINE")
+output = result.out
+error = result.err
+log = result.log
+queue 1

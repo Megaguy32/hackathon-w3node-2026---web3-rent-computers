@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compute Marketplace · Live</title>
+  <link rel="stylesheet" href="/static/live.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <h1>W3Node Compute Marketplace</h1>
+        <p>Idle computers, rented on-chain, running your Kubernetes pods</p>
+      </div>
+    </div>
+    <div class="pulse"><span id="dot" class="dot"></span><span id="clock">connecting…</span></div>
+  </header>
+
+  <section class="counters" id="counters">
+    <div class="counter ready"><b id="c-ready">0</b><span>Ready</span><small>idle, available to rent</small></div>
+    <div class="counter pending"><b id="c-pending">0</b><span>Pending</span><small>rented, waiting for a workload</small></div>
+    <div class="counter live"><b id="c-live">0</b><span>Live</span><small>running a rented workload</small></div>
+    <div class="counter total"><b id="c-total">0</b><span>Registered</span><small>machines in the pool</small></div>
+  </section>
+
+  <main>
+    <section>
+      <h2>Provider machines</h2>
+      <div id="tiles" class="tiles"></div>
+    </section>
+    <section>
+      <h2>On-chain activity <small id="chain"></small></h2>
+      <ul id="feed" class="feed"></ul>
+    </section>
+  </main>
+  <script src="/static/live.js"></script>
+</body>
+</html>

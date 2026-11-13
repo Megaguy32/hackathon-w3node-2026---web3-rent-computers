@@ -1,0 +1,11 @@
+# The API listens for the Virtual Kubelet on a local Unix socket and reaches the
+# remote plugin through the local end of an SSH forward (start-ssh-tunnel.sh,
+# TUNNEL_MODE=local-forward: 127.0.0.1:4000 -> plugin 127.0.0.1:4000 on the pool host).
+# Verify these values against the interLink version installed in the consumer environment.
+InterlinkAddress: "unix:///tmp/interlink.sock"
+InterlinkPort: ""
+SidecarURL: "http://127.0.0.1"
+SidecarPort: "4000"
+VerboseLogging: true
+ErrorsOnlyLogging: false
+DataRootFolder: "/tmp/interlink-jobs"

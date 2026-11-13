@@ -24,3 +24,15 @@ Cloud compute in Africa is expensive and high-latency because servers sit overse
 
 ## Track Alignment (Real World Assets)
 Regarding the context of Real World Assets, a physical computer is tangible hardware that does measurable work. Linking a machine's specs and rental leases to a smart contract pragmatically turns idle hardware into an on-chain asset.
+
+## Working implementation (marketplace-v2)
+
+`marketplace-v2/` is a runnable, tested implementation of the rental flow: a Solidity
+marketplace contract on Ethereum Sepolia, a Go + htmx marketplace UI/indexer, and a patched
+`interlink-htcondor-plugin` that pins a Kubernetes Pod to the machine a wallet rented.
+It was rehearsed end to end on Sepolia (MetaMask rent -> Kubernetes pod via interLink ->
+HTCondor/Apptainer job on the rented machine -> Grafana). See
+`marketplace-v2/docs/DEMO_RUNBOOK.md` for the checklist, results and known gaps.
+
+Note: v2 deliberately has no escrow, ERC-721 tokenization or uptime settlement (the payment goes
+straight to the provider). Those remain the design goals above and live in `contracts/ComputerRWA.sol`.

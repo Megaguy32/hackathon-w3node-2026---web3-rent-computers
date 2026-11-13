@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: w3node-compute-demo
+  namespace: default
+  annotations:
+    marketplace.w3node.io/rental-id: "1" # The demo script replaces this with the active rental ID.
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: interlink-node
+  tolerations:
+    - key: virtual-node.interlink/no-schedule
+      operator: Exists
+  containers:
+    - name: demo
+      image: docker://alpine:3.20
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "Hello from W3Node rented compute"
+          echo "Rental ID: ${W3NODE_RENTAL_ID:-unknown}"
+          echo "Execution host: $(hostname)"
+          echo "Execution UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Architecture: $(uname -m)"
+          echo "Visible CPUs: $(nproc)"
+          cat /etc/os-release | head -n 3
+          # Small CPU workload so there is visible execution on the provider.
+          i=0; while [ "$i" -lt 200000 ]; do i=$((i+1)); done
+          echo "Completed CPU loop: $i"
+      env:
+        - name: W3NODE_RENTAL_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['marketplace.w3node.io/rental-id']
+      resources:
+        requests:
+          cpu: "1"
+          memory: "256Mi"
+        limits:
+          cpu: "1"
+          memory: "256Mi"

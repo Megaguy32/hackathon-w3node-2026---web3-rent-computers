@@ -1,0 +1,42 @@
+# Reboot-proof containers for the demo. Everything uses restart: unless-stopped, so Docker brings the
+# stack back after a reboot. Build/run via scripts/demo-up.sh (which also generates .env and the tunnel key).
+name: w3node
+services:
+  pool:
+    build: { context: ../.., dockerfile: infrastructure/docker/Dockerfile.pool }
+    image: w3node/pool:local
+    container_name: w3pool
+    hostname: ${POOL_MACHINE_NAME:-w3pool}     # HTCondor "Machine" of the local provider; list this name on-chain
+    network_mode: host                         # UI on 127.0.0.1:8090, plugin on 127.0.0.1:4000, pool on :9618
+    restart: unless-stopped
+    env_file: [.env]
+    security_opt: [seccomp=unconfined, apparmor=unconfined]   # unprivileged Apptainer needs user namespaces
+    cap_add: [SYS_ADMIN]
+    devices: ["/dev/fuse:/dev/fuse"]
+    volumes:
+      - market-data:/var/lib/w3node-marketplace
+  sshd:
+    build: { context: ../.., dockerfile: infrastructure/docker/Dockerfile.sshd }
+    image: w3node/sshd:local
+    container_name: w3sshd
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      PLUGIN_PORT: "4000"
+      SSH_PORT: ${SSH_PORT:-2222}
+    volumes:
+      - ${TUNNEL_DIR:?set by scripts/demo-up.sh}/tunnel.pub:/authorized/tunnel.pub:ro
+      - ${TUNNEL_DIR}/hostkeys:/keys
+  node-exporter:                               # host CPU/RAM for the Grafana "provider" panels
+    image: quay.io/prometheus/node-exporter:v1.9.1
+    container_name: w3node-exporter
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=${MINIKUBE_BRIDGE_IP:?set by scripts/demo-up.sh}:9100   # bridge only, not the LAN
+    volumes:
+      - /:/host:ro,rslave
+volumes:
+  market-data:

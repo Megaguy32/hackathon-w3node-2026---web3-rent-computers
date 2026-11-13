@@ -1,0 +1,8 @@
+CommandPrefix: ""
+ExportPodData: true
+DataRootFolder: "/var/lib/w3node-interlink/jobs/"
+BashPath: "/bin/bash"
+SingularityPath: "apptainer"
+VerboseLogging: true
+ErrorsOnlyLogging: false
+ImageOverrides: {}

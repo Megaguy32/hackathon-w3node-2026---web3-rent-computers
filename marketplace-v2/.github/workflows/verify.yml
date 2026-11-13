@@ -1,0 +1,34 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install YAML parser
+        run: python -m pip install pyyaml
+      - name: Run project checks
+        run: ./scripts/check.sh
+      - name: Dry-run patch against real upstream interlink-htcondor-plugin
+        # Fails if upstream moves an anchor. Pin UPSTREAM_REF to a known-good SHA once verified.
+        env:
+          UPSTREAM_REF: ${{ vars.UPSTREAM_PLUGIN_REF }}
+        run: |
+          git clone https://github.com/interlink-hq/interlink-htcondor-plugin.git "$RUNNER_TEMP/upstream"
+          if [ -n "$UPSTREAM_REF" ]; then git -C "$RUNNER_TEMP/upstream" checkout --detach "$UPSTREAM_REF"; fi
+          git -C "$RUNNER_TEMP/upstream" rev-parse HEAD
+          python3 plugin/apply_patch.py "$RUNNER_TEMP/upstream"
+          python3 -m py_compile "$RUNNER_TEMP/upstream/handles.py"

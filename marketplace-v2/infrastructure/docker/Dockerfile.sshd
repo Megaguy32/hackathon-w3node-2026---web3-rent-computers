@@ -1,0 +1,9 @@
+# Hardened sshd that stands in for the pool host's sshd: the laptop's interLink API tunnels through it
+# to the plugin. Build context: the project root.
+FROM ubuntu:24.04
+RUN apt-get update && apt-get install -y --no-install-recommends openssh-server python3 iproute2 \
+ && rm -rf /var/lib/apt/lists/* && mkdir -p /run/sshd
+COPY infrastructure/scripts/create-tunnel-user.sh /usr/local/bin/create-tunnel-user.sh
+COPY infrastructure/docker/sshd-entrypoint.sh /usr/local/bin/sshd-entrypoint.sh
+RUN chmod +x /usr/local/bin/*.sh
+ENTRYPOINT ["/usr/local/bin/sshd-entrypoint.sh"]
