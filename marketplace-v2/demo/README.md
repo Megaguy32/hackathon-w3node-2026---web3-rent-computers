@@ -61,3 +61,15 @@ python demo/animation/render.py            # one MP4 per scene + pitch-animation
 ```
 
 Open `scenes.html?scene=3&t=10` in a browser to preview any scene at any time. Every number on screen is one measured on the rehearsal stack.
+
+## Zooms and annotations on the 60 s cut
+
+`demo/annotate.py` re-renders `demo/out/demo-60s.mp4` with a virtual camera that zooms into the relevant tile of the 2x2 screen at each step, rings around the evidence (new VM tile, rental on-chain, rented VM CPU, pod logs, HTCondor result), step captions, and a "Time-lapse" badge on sped-up sections. Event times come from `timeline.json`, mapped with the same speed-up rules as `edit.py`.
+
+```bash
+pip install pillow numpy
+python demo/annotate.py --stills   # review stills in demo/out/annotated-stills/
+python demo/annotate.py            # -> demo/out/demo-60s-annotated.mp4
+```
+
+Ring coordinates are in source pixels of the 1920x1200 recording; adjust them in `build_story()` if you re-record with a different layout.
