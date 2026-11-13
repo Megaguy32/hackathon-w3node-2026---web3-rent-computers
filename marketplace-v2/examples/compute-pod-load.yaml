@@ -23,7 +23,7 @@ spec:
         - |
           echo "Rental ID: ${W3NODE_RENTAL_ID:-unknown} on $(hostname)"
           echo "Start UTC: $(date -u +%H:%M:%S)"
-          # CPU: 4 busy loops for 45 s.
+          # CPU: 4 busy loops for 45 s (saturates a 2-vCPU provider).
           for i in 1 2 3 4; do ( end=$(( $(date +%s) + 45 )); while [ "$(date +%s)" -lt "$end" ]; do :; done ) & done
           # RAM: hold ~512 MiB (awk builds a 2^29-byte string) for 45 s.
           awk 'BEGIN { s = "x"; for (i = 0; i < 29; i++) s = s s; print "allocated", length(s), "bytes"; system("sleep 45") }' &
@@ -36,8 +36,8 @@ spec:
               fieldPath: metadata.annotations['marketplace.w3node.io/rental-id']
       resources:
         requests:
-          cpu: "4"
+          cpu: "2"
           memory: "1Gi"
         limits:
-          cpu: "4"
+          cpu: "2"
           memory: "1Gi"

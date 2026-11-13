@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Terminal</title>
+<style>
+  html,body { margin:0; height:100%; background:#0b0f1a; color:#d7dcf5; }
+  #caption { position:sticky; top:0; z-index:2; padding:16px 22px; font:700 30px/1.2 Inter, system-ui, sans-serif;
+    background:linear-gradient(90deg,#1d4ed8,#6d28d9); color:#fff; letter-spacing:.01em; min-height:62px; }
+  #term { margin:0; padding:18px 22px 60px; font:20px/1.45 "DejaVu Sans Mono", ui-monospace, monospace; white-space:pre-wrap; word-break:break-all; }
+  .p { color:#22c55e; } .cmd { color:#fbbf24; } .cur { display:inline-block; width:.6em; background:#d7dcf5; animation:b 1s steps(2) infinite; } @keyframes b { 50% { opacity:0; } }
+</style></head><body>
+<div id="caption">&nbsp;</div><pre id="term"></pre>
+<script>
+  const term = document.getElementById('term'), cap = document.getElementById('caption');
+  const scroll = () => window.scrollTo(0, document.body.scrollHeight);
+  window.W3 = {
+    caption(t) { cap.textContent = t; },
+    print(t) { term.append(document.createTextNode(t + '\n')); scroll(); },
+    printMany(lines) { term.append(document.createTextNode(lines.join('\n') + '\n')); scroll(); },
+    async typeCmd(cmd, delay) {
+      const p = document.createElement('span'); p.className = 'p'; p.textContent = '$ '; term.append(p);
+      const c = document.createElement('span'); c.className = 'cmd'; term.append(c);
+      for (const ch of cmd) { c.textContent += ch; scroll(); await new Promise(r => setTimeout(r, delay)); }
+      term.append(document.createTextNode('\n'));
+    },
+    clear() { term.textContent = ''; },
+  };
+</script></body></html>

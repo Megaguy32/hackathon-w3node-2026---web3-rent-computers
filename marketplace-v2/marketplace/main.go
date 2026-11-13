@@ -98,6 +98,8 @@ func main() {
 	mux.HandleFunc("GET /api/nodes", app.handleNodes)
 	mux.HandleFunc("GET /api/listings", app.handleListings)
 	mux.HandleFunc("GET /api/rentals", app.handleRentals)
+	mux.HandleFunc("GET /live", app.handleLivePage)
+	mux.HandleFunc("GET /api/live", app.handleLiveAPI)
 	mux.HandleFunc("GET /partial/nodes", app.handleNodeRows)
 	mux.HandleFunc("GET /partial/node-options", app.handleNodeOptions)
 	mux.HandleFunc("GET /partial/listings", app.handleListingRows)

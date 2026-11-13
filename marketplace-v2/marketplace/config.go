@@ -21,6 +21,7 @@ type Config struct {
 	// Confirmations is how many blocks the chain watcher stays behind the head (default 3, about 36 s on
 	// Sepolia). Lower it (1) for a live demo; each block of depth is a block of reorg protection you give up.
 	Confirmations uint64
+	ExplorerURL   string // base URL for transaction links in the Live view
 }
 
 func loadConfig() Config {
@@ -48,6 +49,7 @@ func loadConfig() Config {
 		PollInterval:    time.Duration(pollSeconds) * time.Second,
 		StartBlock:      startBlock,
 		Confirmations:   confirmations,
+		ExplorerURL:     explorerFor(chainID, os.Getenv("EXPLORER_URL")),
 	}
 }
 
@@ -56,4 +58,17 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func explorerFor(chainID uint64, override string) string {
+	if o := strings.TrimRight(strings.TrimSpace(override), "/"); o != "" {
+		return o
+	}
+	switch chainID {
+	case 11155111:
+		return "https://sepolia.etherscan.io"
+	case 1:
+		return "https://etherscan.io"
+	}
+	return ""
 }

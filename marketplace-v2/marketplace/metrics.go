@@ -22,7 +22,8 @@ type fleetCounts struct {
 	Ready, Pending, Live, Other int
 }
 
-func classifyFleet(ads []map[string]any, rentedMachines map[string]bool) fleetCounts {
+// machineStates classifies every machine in the pool: "live", "pending", "ready" or "other".
+func machineStates(ads []map[string]any, rentedMachines map[string]bool) map[string]string {
 	type seen struct{ claimed, idleApptainer bool }
 	machines := map[string]*seen{}
 	for _, ad := range ads {
@@ -43,14 +44,31 @@ func classifyFleet(ads []map[string]any, rentedMachines map[string]bool) fleetCo
 			s.idleApptainer = true
 		}
 	}
-	var c fleetCounts
+	out := make(map[string]string, len(machines))
 	for name, s := range machines {
 		switch {
 		case s.claimed:
-			c.Live++
+			out[name] = "live"
 		case rentedMachines[name]:
-			c.Pending++
+			out[name] = "pending"
 		case s.idleApptainer:
+			out[name] = "ready"
+		default:
+			out[name] = "other"
+		}
+	}
+	return out
+}
+
+func classifyFleet(ads []map[string]any, rentedMachines map[string]bool) fleetCounts {
+	var c fleetCounts
+	for _, st := range machineStates(ads, rentedMachines) {
+		switch st {
+		case "live":
+			c.Live++
+		case "pending":
+			c.Pending++
+		case "ready":
 			c.Ready++
 		default:
 			c.Other++

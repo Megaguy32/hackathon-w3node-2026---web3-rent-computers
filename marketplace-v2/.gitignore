@@ -25,3 +25,6 @@ marketplace/marketplace
 interLink/
 
 .sepolia-rehearsal.env
+
+# demo recordings and timelines
+demo/out/

@@ -13,7 +13,9 @@ if [[ "${POOL_RUN_STARTD:-true}" == true ]]; then   # this host is also a provid
   printf 'DAEMON_LIST = MASTER, COLLECTOR, NEGOTIATOR, SCHEDD, SHARED_PORT, STARTD\nUSE_SHARED_PORT = True\n' > /etc/condor/config.d/99-local-execute.conf
 fi
 if [[ "${CONDOR_FAST:-true}" == true ]]; then       # snappier matching for a live demo
-  printf 'NEGOTIATOR_INTERVAL = 5\nNEGOTIATOR_CYCLE_DELAY = 2\n' > /etc/condor/config.d/99-fast.conf
+  # CLASSAD_LIFETIME: a provider that disappears (VM deleted) leaves the pool after ~1 min instead of 15; every
+  # daemon here (incl. the local startd) must then re-advertise faster than that, hence UPDATE_INTERVAL.
+  printf 'NEGOTIATOR_INTERVAL = 5\nNEGOTIATOR_CYCLE_DELAY = 2\nCLASSAD_LIFETIME = 60\nUPDATE_INTERVAL = 20\n' > /etc/condor/config.d/99-fast.conf
 fi
 
 # --- supervised helpers: restart on exit, wait for the pool first.

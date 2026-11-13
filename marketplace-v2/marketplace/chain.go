@@ -267,7 +267,10 @@ func (c *ChainWatcher) applyListingLog(l chainLog) error {
 		return err
 	}
 	block, _ := parseHexUint(l.BlockNumber)
-	return wrapPersist(c.store.PutListing(Listing{ListingID: id, Provider: provider, MachineName: machine, PriceWei: price, DurationSeconds: toInt64(duration), Active: true, CreatedAt: int64(block)}))
+	if err := wrapPersist(c.store.PutListing(Listing{ListingID: id, Provider: provider, MachineName: machine, PriceWei: price, DurationSeconds: toInt64(duration), Active: true, CreatedAt: int64(block)})); err != nil {
+		return err
+	}
+	return wrapPersist(c.store.AddEvent(Event{Kind: "listing", ID: id, Machine: machine, Actor: provider, PriceWei: price, Tx: l.TransactionHash, Block: block, Seen: time.Now().Unix()}))
 }
 
 // applyListingUpdatedLog handles ListingUpdated(listingId indexed, priceWei,
@@ -347,7 +350,11 @@ func (c *ChainWatcher) applyRentalLog(l chainLog) error {
 	if err != nil {
 		return err
 	}
-	return wrapPersist(c.store.PutRental(Rental{RentalID: rentalID, ListingID: listingID, Consumer: consumer, Provider: provider, MachineName: machine, ExpiresAt: toInt64(expires), PaidWei: paid, CreatedAt: time.Now().Unix()}))
+	if err := wrapPersist(c.store.PutRental(Rental{RentalID: rentalID, ListingID: listingID, Consumer: consumer, Provider: provider, MachineName: machine, ExpiresAt: toInt64(expires), PaidWei: paid, CreatedAt: time.Now().Unix()})); err != nil {
+		return err
+	}
+	block, _ := parseHexUint(l.BlockNumber)
+	return wrapPersist(c.store.AddEvent(Event{Kind: "rental", ID: rentalID, Machine: machine, Actor: consumer, PriceWei: paid, Tx: l.TransactionHash, Block: block, Seen: time.Now().Unix()}))
 }
 
 func decodeHex(s string) ([]byte, error) { return hex.DecodeString(strings.TrimPrefix(s, "0x")) }

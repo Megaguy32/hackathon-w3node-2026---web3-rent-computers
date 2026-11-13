@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 )
@@ -30,9 +31,24 @@ type Rental struct {
 	CreatedAt   int64  `json:"createdAt"`
 }
 
+// Event is one indexed on-chain action, shown in the Live feed.
+type Event struct {
+	Kind     string `json:"kind"` // "listing" or "rental"
+	ID       string `json:"id"`
+	Machine  string `json:"machine"`
+	Actor    string `json:"actor"` // provider (listing) or consumer (rental)
+	PriceWei string `json:"priceWei"`
+	Tx       string `json:"tx"`
+	Block    uint64 `json:"block"`
+	Seen     int64  `json:"seen"`
+}
+
+const maxEvents = 200
+
 type diskState struct {
 	Listings map[string]Listing `json:"listings"`
 	Rentals  map[string]Rental  `json:"rentals"`
+	Events   []Event            `json:"events,omitempty"`
 }
 
 type Store struct {
@@ -170,4 +186,32 @@ func writeJSONAtomic(path string, value any, mode os.FileMode) error {
 		return err
 	}
 	return nil
+}
+
+// AddEvent records an indexed action once (re-indexing from an earlier block does not duplicate it).
+func (s *Store) AddEvent(e Event) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, old := range s.data.Events {
+		if old.Kind == e.Kind && old.ID == e.ID && old.Tx == e.Tx {
+			return nil
+		}
+	}
+	s.data.Events = append(s.data.Events, e)
+	sort.SliceStable(s.data.Events, func(i, j int) bool { return s.data.Events[i].Block < s.data.Events[j].Block })
+	if n := len(s.data.Events); n > maxEvents {
+		s.data.Events = s.data.Events[n-maxEvents:]
+	}
+	return s.persistLocked()
+}
+
+// Events returns the newest events first.
+func (s *Store) Events() []Event {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]Event, len(s.data.Events))
+	for i, e := range s.data.Events {
+		out[len(out)-1-i] = e
+	}
+	return out
 }
