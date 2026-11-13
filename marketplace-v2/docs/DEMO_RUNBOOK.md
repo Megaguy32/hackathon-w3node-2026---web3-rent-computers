@@ -87,3 +87,11 @@ and AppArmor, `--device /dev/fuse`, `--cap-add SYS_ADMIN`. A normal VM needs non
 Still not exercised: the SSH `-L` tunnel (the rehearsal used host networking, so interLink
 talked to the plugin directly on 127.0.0.1:4000), KVM2 Minikube driver (rehearsal used the
 Docker driver), and the cloud-init provider VM.
+
+## SSH tunnel verification (real sshd)
+
+Tested `consumer/interlink/start-ssh-tunnel.sh` (TUNNEL_MODE=local-forward) against an Ubuntu 24.04 sshd configured
+by `infrastructure/scripts/create-tunnel-user.sh`: pinned host key + permitted port works (plugin answers on the
+local end), a wrong pinned host key is refused, a forward to any other port is blocked, and the account has no
+shell. Found and fixed: user-level `ControlMaster auto` in `~/.ssh/config` made the forward outlive the script and
+bypass host-key pinning; the scripts now pass `-o ControlMaster=no -o ControlPath=none -o ControlPersist=no`.

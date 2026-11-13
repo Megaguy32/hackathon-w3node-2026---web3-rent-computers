@@ -299,7 +299,7 @@ cmd_marketplace_ui() {
   [[ "$port" =~ ^[0-9]+$ ]] || port=22
   key="${SSH_KEY/#\~/$HOME}"
   log "Forwarding remote marketplace UI to http://127.0.0.1:${MARKETPLACE_UI_LOCAL_PORT}"
-  exec ssh -i "$key" -p "$port" -N -L "${MARKETPLACE_UI_LOCAL_PORT}:127.0.0.1:8080" -o ExitOnForwardFailure=yes "${MARKETPLACE_SSH_USER}@${host}"
+  exec ssh -i "$key" -p "$port" -N -L "${MARKETPLACE_UI_LOCAL_PORT}:127.0.0.1:8080" -o ExitOnForwardFailure=yes -o ControlMaster=no -o ControlPath=none -o ControlPersist=no "${MARKETPLACE_SSH_USER}@${host}"
 }
 
 cmd_run() {

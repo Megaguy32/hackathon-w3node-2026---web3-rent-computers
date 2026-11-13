@@ -251,6 +251,18 @@ export SSH_KEY="$HOME/.ssh/interlink_rsa"
 export SSH_HOST_KEY_FILE="$HOME/.ssh/interlink_host_key" # recommended
 ```
 
+On the pool host, create the restricted tunnel account once (no shell, can only forward to the plugin port) and reload sshd:
+
+```bash
+sudo infrastructure/scripts/create-tunnel-user.sh /path/to/interlink_rsa.pub 4000
+sudo systemctl reload sshd
+```
+
+The tunnel script disables SSH connection multiplexing on purpose: a `ControlMaster`/`ControlPersist` entry in
+`~/.ssh/config` would otherwise leave the forward running after `disconnect` and skip host-key pinning.
+If `127.0.0.1:4000` is already taken on the consumer machine, set `PLUGIN_LOCAL_PORT` (for example `4001`);
+both the tunnel and `start-api-and-vk.sh` honour it.
+
 Run these in separate terminals, in this order:
 
 ```bash

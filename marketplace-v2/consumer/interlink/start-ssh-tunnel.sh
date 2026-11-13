@@ -7,7 +7,8 @@ INTERLINK_DIR="${INTERLINK_DIR:-$HOME/src/interLink}"
 SSH_KEY="${SSH_KEY/#\~/$HOME}"
 if [[ -n "${SSH_HOST_KEY_FILE:-}" ]]; then SSH_HOST_KEY_FILE="${SSH_HOST_KEY_FILE/#\~/$HOME}"; fi
 LOCAL_SOCKET="${LOCAL_SOCKET:-/tmp/interlink.sock}"
-PLUGIN_PORT="${PLUGIN_PORT:-4000}"
+PLUGIN_PORT="${PLUGIN_PORT:-4000}"            # port the plugin listens on, on the remote pool host
+LOCAL_PORT="${PLUGIN_LOCAL_PORT:-$PLUGIN_PORT}" # local end of the forward (must match SidecarPort; set it when 127.0.0.1:$PLUGIN_PORT is taken locally)
 # TUNNEL_MODE:
 #   local-forward (default) - `ssh -L 127.0.0.1:PORT:127.0.0.1:PORT`: the interLink API reaches the
 #                             remote plugin at http://127.0.0.1:PORT (SidecarURL in InterLinkConfig.yaml).
@@ -22,8 +23,12 @@ host="${MARKETPLACE_SSH_ADDR%:*}"; port="${MARKETPLACE_SSH_ADDR##*:}"
 
 case "$TUNNEL_MODE" in
   local-forward)
-    opts=(-i "$SSH_KEY" -p "$port" -N -L "127.0.0.1:${PLUGIN_PORT}:127.0.0.1:${PLUGIN_PORT}"
-          -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes)
+    opts=(-i "$SSH_KEY" -p "$port" -N -L "127.0.0.1:${LOCAL_PORT}:127.0.0.1:${PLUGIN_PORT}"
+          -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes
+          # A user-level `ControlMaster auto`/`ControlPersist` in ~/.ssh/config would otherwise turn this
+          # into a detached shared master: stop_bg could not close the tunnel and later connections
+          # would skip this script's host-key pinning.
+          -o ControlMaster=no -o ControlPath=none -o ControlPersist=no -o BatchMode=yes)
     if [[ -n "${SSH_HOST_KEY_FILE:-}" ]]; then
       [[ -f "$SSH_HOST_KEY_FILE" ]] || { echo "SSH_HOST_KEY_FILE not found: $SSH_HOST_KEY_FILE" >&2; exit 1; }
       kh="$(mktemp)"; trap 'rm -f "$kh"' EXIT

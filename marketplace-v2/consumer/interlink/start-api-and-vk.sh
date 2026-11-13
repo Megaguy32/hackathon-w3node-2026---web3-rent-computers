@@ -4,6 +4,12 @@ set -euo pipefail
 INTERLINK_DIR="${INTERLINK_DIR:-$HOME/src/interLink}"
 CONFIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export INTERLINKCONFIGPATH="${INTERLINKCONFIGPATH:-$CONFIG_DIR/InterLinkConfig.yaml}"
+# If the SSH forward's local port differs from the shipped SidecarPort, render a config copy.
+if [[ -n "${PLUGIN_LOCAL_PORT:-}" ]]; then
+  rendered="$(mktemp --suffix=.yaml)"
+  sed "s/^SidecarPort:.*/SidecarPort: \"${PLUGIN_LOCAL_PORT}\"/" "$INTERLINKCONFIGPATH" > "$rendered"
+  export INTERLINKCONFIGPATH="$rendered"
+fi
 
 if [[ ! -x "$INTERLINK_DIR/bin/interlink" ]]; then
   echo "Missing $INTERLINK_DIR/bin/interlink. Build interLink first." >&2
