@@ -18,6 +18,18 @@ on-chain feed), **Grafana** (fleet counters, CPU/RAM) and a **terminal** pane th
 5. Cockpit pane: `sudo pacman -S cockpit cockpit-machines && sudo systemctl enable --now cockpit.socket`, then run with
    `COCKPIT_PASSWORD` set (or you are prompted; it is never stored). Skip it with `--no-cockpit`.
 
+## Secrets (never typed into chat, never committed)
+
+Create `~/.local/state/w3node/demo-secrets.env` yourself, mode 600, with e.g.:
+
+```
+COCKPIT_PASSWORD=your-linux-password
+OBS_WEBSOCKET_PASSWORD=the-obs-websocket-password
+```
+
+The conductor reads it (and refuses it if other users can read it). Use `--countdown 15` to get time to
+minimise your terminal before the windows open.
+
 ## Before you record
 
 - **Minimise the terminal you launch the conductor from** (or run it from another virtual desktop). KDE keeps an

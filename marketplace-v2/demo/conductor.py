@@ -35,9 +35,23 @@ def load_env(path):
 
 
 ENV = {**load_env(ROOT / ".demo-laptop.env")}
+
+
+def load_secrets(path):
+    """KEY=VALUE lines, values taken literally (no expansion). Refuses a file other users can read."""
+    if not path.exists():
+        return
+    if path.stat().st_mode & 0o077:
+        sys.exit(f"{path} must not be readable by others: chmod 600 {path}")
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip().strip("'\""))
 PROFILE = ENV.get("MINIKUBE_PROFILE", "w3node-demo")
 MARKET = os.environ.get("MARKETPLACE_URL", "http://127.0.0.1:8090")
 STATE = Path(ENV.get("DEMO_STATE_DIR", str(Path.home() / ".local/state/w3node")))
+load_secrets(STATE / "demo-secrets.env")   # COCKPIT_PASSWORD, OBS_WEBSOCKET_PASSWORD (written by you, never by a script)
 
 
 class Timeline:
@@ -214,14 +228,18 @@ def main():
     ap.add_argument("--keep-open", type=int, default=6, help="seconds to leave the final screen up")
     ap.add_argument("--type-speed", type=int, default=28, help="ms per typed character")
     ap.add_argument("--out", default=str(ROOT / "demo/out"))
+    ap.add_argument("--countdown", type=int, default=0, help="seconds to wait before opening windows (time to minimise your terminal)")
     ap.add_argument("--snapshots", action="store_true", help="save a PNG of every pane at key moments to <out>/stills (handy for slides and for checking the layout)")
     a = ap.parse_args()
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     vm = "w3node-provider-" + secrets.token_hex(2)
+    created_listing = None
 
     print("Preflight..."); 
     if subprocess.run([str(ROOT / "scripts/demo-preflight.sh")], capture_output=True).returncode != 0:
         sys.exit("Preflight failed; run ./scripts/demo-preflight.sh and fix the FAIL lines first.")
+    for i in range(a.countdown, 0, -1):
+        print(f"  starting in {i}s: minimise this terminal or switch to another desktop", flush=True); time.sleep(1)
     rec = {"none": NoRecorder, "manual": ManualRecorder, "obs": ObsRecorder}[a.recorder]()
     d = make_driver()
     try:
@@ -250,7 +268,7 @@ def main():
             # 2. provider publishes the machine on-chain
             term.caption("2/5  The provider lists it on Ethereum")
             rc, lines = term.run(f"./scripts/chain-actions.sh publish {vm}", "publish listing")
-            assert rc == 0, "publish failed"; lid = lines[-1].strip(); tl.mark("listing_sent", f"listing {lid}")
+            assert rc == 0, "publish failed"; lid = lines[-1].strip(); created_listing = lid; tl.mark("listing_sent", f"listing {lid}")
             wait_until(tl, "listing_visible", f"listing {lid}", lambda: any(t["machine"] == vm and t.get("listingId") == lid for t in api("/api/live")["tiles"]), 120)
             # 3. a consumer rents it
             term.caption("3/5  A consumer rents it: 0.001 ETH paid on-chain")
@@ -285,6 +303,8 @@ def main():
         d.quit()
         if a.cleanup:
             subprocess.run([str(ROOT / "scripts/provider-vm.sh"), "delete", vm])
+            if created_listing:   # take the demo machine off the market so old takes do not pile up as Offline tiles
+                subprocess.run([str(ROOT / "scripts/chain-actions.sh"), "deactivate", created_listing])
 
 
 if __name__ == "__main__":

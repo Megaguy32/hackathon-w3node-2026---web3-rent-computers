@@ -6,6 +6,7 @@
 #   ./scripts/chain-actions.sh balances                ETH balances of deployer, provider and demo consumer
 #   ./scripts/chain-actions.sh publish <machine> [priceWei] [seconds]   provider lists a machine; prints the listing ID
 #   ./scripts/chain-actions.sh rent <listingId>        demo consumer rents it; prints the rental ID
+#   ./scripts/chain-actions.sh deactivate <listingId>  provider takes its listing off the market (keeps price/duration)
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${REHEARSAL_ENV:-$ROOT/.sepolia-rehearsal.env}"
@@ -55,5 +56,11 @@ r=json.load(sys.stdin)
 assert r['status'] in ('0x1',1,'1'), 'transaction failed: '+str(r.get('status'))
 lg=[l for l in r['logs'] if l['topics'][0]=='$RPC_TOPIC_RENTAL'][0]
 print(int(lg['topics'][1],16))" ;;
-  *) sed -n 2,10p "$0"; exit 2 ;;
+  deactivate)
+    id="${2:?listing id}"
+    read -r price secs < <(cast_ 'cast call "$CONTRACT" "getListing(uint256)((address,string,uint256,uint256,bool))" "$1" --rpc-url "$RPC"' "$id" \
+      | python3 -c 'import sys,re;m=re.search(r"\", (\d+)[^,]*, (\d+),",sys.stdin.read());print(m.group(1),m.group(2))')
+    cast_ 'cast send "$CONTRACT" "updateListing(uint256,uint256,uint256,bool)" "$1" "$2" "$3" false --rpc-url "$RPC" --private-key "$PROVIDER_PRIVATE_KEY" --gas-limit 600000 --json' "$id" "$price" "$secs" \
+      | python3 -c "import json,sys;r=json.load(sys.stdin);assert r['status'] in ('0x1',1,'1'),'transaction failed';print('listing $id deactivated')" ;;
+  *) sed -n 2,11p "$0"; exit 2 ;;
 esac
