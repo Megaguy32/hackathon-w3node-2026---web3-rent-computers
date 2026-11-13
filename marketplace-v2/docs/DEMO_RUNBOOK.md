@@ -107,3 +107,18 @@ bypass host-key pinning; the scripts now pass `-o ControlMaster=no -o ControlPat
   `provider-up` aborted on an unbound variable.
 - Image choice: Alpine has no HTCondor package and Debian has no Apptainer; Ubuntu 26.04 has condor, apptainer
   and prometheus-node-exporter in one archive.
+
+## Two-provider rehearsal on the KVM2 stack (2026-11-13, real Sepolia)
+
+Stack: KVM2 Minikube (`demo-laptop.sh prepare`), SSH `-L` tunnel to a hardened sshd, pool container running the
+repo's pool config (`00-auth-demo.conf` + `01-pool.conf`), provider #1 = `zenshin` (Docker), provider #2 = a
+KVM VM built by `demo-laptop.sh provider-up` (Ubuntu 26.04, condor 25.6, apptainer 1.4.5) that joined the pool via CCB.
+
+Result: PASS. Rented listing #2 (`w3node-provider`) with MetaMask; `demo-laptop.sh run 2 load` ran the pod through the
+tunnel; HTCondor placed job `RentalId=2` on `slot1_1@w3node-provider` while `zenshin` was idle and eligible (provider
+pinning proven with two real machines). Pod `Succeeded`, `kubectl logs` returned the output ("Rental ID: 2 on
+w3node-provider", 512 MiB allocated), Grafana showed the VM's CPU peaking ~98% and RAM, plus the consumer node.
+
+Still not exercised: a pool/provider separated from the laptop by a real network (CCB through NAT was only tested
+across libvirt's NAT bridge), the Docker-free host (no firewall helper needed there), multi-hour rentals/expiry.
+Firewall note: the helper's rules are runtime-only; re-run `apply` after a reboot or Docker/libvirt restart.
