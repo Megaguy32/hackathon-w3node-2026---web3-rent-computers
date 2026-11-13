@@ -106,6 +106,18 @@ func main() {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	server := &http.Server{Addr: cfg.ListenAddr, Handler: securityHeaders(mux), ReadHeaderTimeout: 5 * time.Second}
+	if cfg.MetricsAddr != "" {
+		mmux := http.NewServeMux()
+		mmux.HandleFunc("GET /metrics", app.handleMetrics)
+		msrv := &http.Server{Addr: cfg.MetricsAddr, Handler: mmux, ReadHeaderTimeout: 5 * time.Second}
+		go func() {
+			log.Printf("Prometheus metrics on %s/metrics", cfg.MetricsAddr)
+			if err := msrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Printf("metrics server: %v", err)
+			}
+		}()
+		go func() { <-ctx.Done(); _ = msrv.Close() }()
+	}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)

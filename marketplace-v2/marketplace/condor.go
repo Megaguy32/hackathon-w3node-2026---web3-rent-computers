@@ -22,7 +22,8 @@ type ComputeNode struct {
 	Available    bool   `json:"available"`
 }
 
-func listComputeNodes(binary string) ([]ComputeNode, error) {
+// readAds runs `condor_status -json` and returns the raw slot ClassAds.
+func readAds(binary string) ([]map[string]any, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
 	defer cancel()
 	out, err := exec.CommandContext(ctx, binary, "-json").Output()
@@ -33,6 +34,18 @@ func listComputeNodes(binary string) ([]ComputeNode, error) {
 	if err := json.Unmarshal(out, &ads); err != nil {
 		return nil, fmt.Errorf("decode condor_status JSON: %w", err)
 	}
+	return ads, nil
+}
+
+func listComputeNodes(binary string) ([]ComputeNode, error) {
+	ads, err := readAds(binary)
+	if err != nil {
+		return nil, err
+	}
+	return nodesFromAds(ads), nil
+}
+
+func nodesFromAds(ads []map[string]any) []ComputeNode {
 	// condor_status commonly returns one ClassAd per slot. The marketplace
 	// rents a provider machine, not an individual slot, so present one row per
 	// Machine value. Keep the largest observed CPU/memory figures and consider
@@ -76,7 +89,7 @@ func listComputeNodes(binary string) ([]ComputeNode, error) {
 		byMachine[machine] = len(nodes)
 		nodes = append(nodes, node)
 	}
-	return nodes, nil
+	return nodes
 }
 
 func stringField(m map[string]any, key string) string {

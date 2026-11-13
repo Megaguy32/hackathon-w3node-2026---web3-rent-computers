@@ -357,18 +357,25 @@ cmd_monitoring() {
   log 'Installing kube-prometheus-stack into the local Minikube consumer cluster.'
   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts >/dev/null 2>&1 || true
   helm repo update >/dev/null
+  # MARKETPLACE_METRICS_TARGET="host:9101": the marketplace backend /metrics (METRICS_ADDR) for the compute-fleet counters.
   # PROVIDER_METRICS_TARGETS="host:9100,host2:9100": node_exporter endpoints on the rented provider
   # machines (the workload runs there, not in Minikube). They feed the dashboard's CPU/RAM panels.
   local values="$STATE_DIR/monitoring-values.yaml"
-  PROVIDER_METRICS_TARGETS="${PROVIDER_METRICS_TARGETS:-}" python3 - "$values" <<'PY'
+  PROVIDER_METRICS_TARGETS="${PROVIDER_METRICS_TARGETS:-}" MARKETPLACE_METRICS_TARGET="${MARKETPLACE_METRICS_TARGET:-}" python3 - "$values" <<'PY'
 import os, sys
 targets = [t.strip() for t in os.environ.get("PROVIDER_METRICS_TARGETS", "").split(",") if t.strip()]
+market = os.environ.get("MARKETPLACE_METRICS_TARGET", "").strip()
 lines = ["prometheus:", "  prometheusSpec:"]
+if targets or market:
+    lines += ["    additionalScrapeConfigs:"]
 if targets:
-    lines += ["    additionalScrapeConfigs:", "      - job_name: w3node-provider", "        scrape_interval: 5s",
+    lines += ["      - job_name: w3node-provider", "        scrape_interval: 5s",
               "        static_configs:", "          - targets:"]
     lines += [f"              - '{t}'" for t in targets]
-else:
+if market:
+    lines += ["      - job_name: w3node-marketplace", "        scrape_interval: 5s",
+              "        static_configs:", "          - targets:", f"              - '{market}'"]
+if not (targets or market):
     lines += ["    {}"]
 open(sys.argv[1], "w").write("\n".join(lines) + "\n")
 PY

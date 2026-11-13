@@ -23,9 +23,9 @@ const (
 	rentalCreatedTopic  = "0xec629e63935ac5c5900777ba2f0204a90aa022089dbcccb2689ab9408399d767"
 	listingUpdatedTopic = "0xd2326201b794480c95fc221341873c03b3693dda95bf505803fc788672cfff2b"
 
-	// confirmationDepth keeps the watcher a few blocks behind the head so a
+	// defaultConfirmations keeps the watcher a few blocks behind the head so a
 	// shallow reorg cannot leave a phantom rental in the authorisation state.
-	confirmationDepth = 3
+	defaultConfirmations = 3
 )
 
 var addressPattern = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
@@ -99,10 +99,10 @@ func (c *ChainWatcher) Run(ctx context.Context) {
 				log.Printf("chain block query: %v", err)
 				continue
 			}
-			if latest < confirmationDepth {
+			if latest < c.cfg.Confirmations {
 				continue
 			}
-			latest -= confirmationDepth
+			latest -= c.cfg.Confirmations
 			if latest < cursor {
 				continue
 			}

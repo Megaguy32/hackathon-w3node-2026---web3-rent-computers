@@ -1,4 +1,4 @@
-# Visible-load variant of the demo workload: ~60 s of CPU burn on 4 workers plus ~512 MiB of RAM,
+# Visible-load variant of the demo workload: ~45 s of CPU burn on 4 workers plus ~512 MiB of RAM,
 # so the Grafana CPU/RAM panels for the rented provider machine visibly move.
 # Run with: ./scripts/demo-laptop.sh run <rental-id> load
 apiVersion: v1
@@ -23,10 +23,10 @@ spec:
         - |
           echo "Rental ID: ${W3NODE_RENTAL_ID:-unknown} on $(hostname)"
           echo "Start UTC: $(date -u +%H:%M:%S)"
-          # CPU: 4 busy loops for 60 s.
-          for i in 1 2 3 4; do ( end=$(( $(date +%s) + 60 )); while [ "$(date +%s)" -lt "$end" ]; do :; done ) & done
-          # RAM: hold ~512 MiB (awk builds a 2^29-byte string) for 60 s.
-          awk 'BEGIN { s = "x"; for (i = 0; i < 29; i++) s = s s; print "allocated", length(s), "bytes"; system("sleep 60") }' &
+          # CPU: 4 busy loops for 45 s.
+          for i in 1 2 3 4; do ( end=$(( $(date +%s) + 45 )); while [ "$(date +%s)" -lt "$end" ]; do :; done ) & done
+          # RAM: hold ~512 MiB (awk builds a 2^29-byte string) for 45 s.
+          awk 'BEGIN { s = "x"; for (i = 0; i < 29; i++) s = s s; print "allocated", length(s), "bytes"; system("sleep 45") }' &
           wait
           echo "End UTC: $(date -u +%H:%M:%S)"
       env:

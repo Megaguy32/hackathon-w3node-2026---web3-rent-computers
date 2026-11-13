@@ -4,6 +4,8 @@ A hackathon prototype for renting real HTCondor compute capacity through an Ethe
 
 **Core proof:** a Kubernetes Pod with a marketplace rental ID is submitted through interLink, converted into an HTCondor job, pinned to the rented provider machine, and executed there with Apptainer.
 
+> Recording a demo? Start with `./scripts/demo-preflight.sh` and follow [docs/VIDEO_DEMO_3MIN.md](docs/VIDEO_DEMO_3MIN.md).
+
 ## Architecture
 
 ```mermaid
