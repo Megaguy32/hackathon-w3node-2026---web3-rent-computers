@@ -1,0 +1,24 @@
+[Unit]
+Description=W3Node Compute Marketplace
+After=network-online.target condor.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=w3node
+Group=w3node
+WorkingDirectory=/opt/w3node/marketplace
+EnvironmentFile=/etc/w3node-marketplace.env
+ExecStart=/opt/w3node/bin/marketplace
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+RuntimeDirectory=w3node
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/w3node-compute-marketplace /run/w3node
+
+[Install]
+WantedBy=multi-user.target

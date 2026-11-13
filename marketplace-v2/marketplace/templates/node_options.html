@@ -1,0 +1,2 @@
+<option value="">Select an available machine</option>
+{{range .Nodes}}{{if .Available}}<option value="{{.Machine}}">{{.Machine}} — {{.CPUs}} CPU / {{.MemoryMiB}} MiB</option>{{end}}{{end}}

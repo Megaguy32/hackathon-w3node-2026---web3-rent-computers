@@ -1,0 +1,7 @@
+InterlinkURL: "unix:///tmp/interlink.sock"
+InterlinkPort: ""
+VerboseLogging: true
+ErrorsOnlyLogging: false
+NodeName: "interlink-node"
+NodeLabels:
+  - "interlink.cern.ch/provider=w3node-htcondor"

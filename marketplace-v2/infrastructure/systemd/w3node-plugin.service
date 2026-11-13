@@ -1,0 +1,22 @@
+[Unit]
+Description=W3Node patched interLink HTCondor plugin
+After=network-online.target condor.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=w3node
+Group=w3node
+WorkingDirectory=/opt/w3node/interlink-htcondor-plugin
+Environment=PYTHONUNBUFFERED=1
+Environment=MEGA_RENTALS_FILE=/run/w3node/rentals.json
+ExecStart=/opt/w3node/interlink-htcondor-plugin/.venv/bin/python /opt/w3node/interlink-htcondor-plugin/handles.py --port 4000
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+RuntimeDirectory=w3node
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+
+[Install]
+WantedBy=multi-user.target

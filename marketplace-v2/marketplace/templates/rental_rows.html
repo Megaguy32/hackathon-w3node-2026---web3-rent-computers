@@ -1,0 +1,7 @@
+{{if not .Rentals}}
+  <p class="muted">No rentals indexed yet.</p>
+{{else}}
+  <div class="table-wrap"><table><thead><tr><th>Rental</th><th>Consumer</th><th>Provider machine</th><th>Expires</th><th>Status</th><th>Pod annotation</th></tr></thead><tbody>
+  {{range .Rentals}}<tr><td>{{.RentalID}}</td><td><code>{{short .Consumer}}</code></td><td><code>{{.MachineName}}</code></td><td>{{timestamp .ExpiresAt}}</td><td>{{if gt .ExpiresAt $.Now}}<span class="pill good">Active</span>{{else}}<span class="pill">Expired</span>{{end}}</td><td><code>marketplace.w3node.io/rental-id: "{{.RentalID}}"</code></td></tr>{{end}}
+  </tbody></table></div>
+{{end}}

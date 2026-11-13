@@ -1,0 +1,8 @@
+[
+  {"type":"function","name":"registerListing","stateMutability":"nonpayable","inputs":[{"name":"machineName","type":"string"},{"name":"priceWei","type":"uint256"},{"name":"durationSeconds","type":"uint256"}],"outputs":[{"name":"listingId","type":"uint256"}]},
+  {"type":"function","name":"rent","stateMutability":"payable","inputs":[{"name":"listingId","type":"uint256"}],"outputs":[{"name":"rentalId","type":"uint256"}]},
+  {"type":"function","name":"updateListing","stateMutability":"nonpayable","inputs":[{"name":"listingId","type":"uint256"},{"name":"priceWei","type":"uint256"},{"name":"durationSeconds","type":"uint256"},{"name":"active","type":"bool"}],"outputs":[]},
+  {"type":"event","name":"ListingCreated","anonymous":false,"inputs":[{"name":"listingId","type":"uint256","indexed":true},{"name":"provider","type":"address","indexed":true},{"name":"machineName","type":"string","indexed":false},{"name":"priceWei","type":"uint256","indexed":false},{"name":"durationSeconds","type":"uint256","indexed":false}]},
+  {"type":"event","name":"ListingUpdated","anonymous":false,"inputs":[{"name":"listingId","type":"uint256","indexed":true},{"name":"priceWei","type":"uint256","indexed":false},{"name":"durationSeconds","type":"uint256","indexed":false},{"name":"active","type":"bool","indexed":false}]},
+  {"type":"event","name":"RentalCreated","anonymous":false,"inputs":[{"name":"rentalId","type":"uint256","indexed":true},{"name":"listingId","type":"uint256","indexed":true},{"name":"consumer","type":"address","indexed":true},{"name":"provider","type":"address","indexed":false},{"name":"machineName","type":"string","indexed":false},{"name":"expiresAt","type":"uint256","indexed":false},{"name":"paidWei","type":"uint256","indexed":false}]}
+]

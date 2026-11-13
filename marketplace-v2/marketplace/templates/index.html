@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compute Marketplace</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/htmx.min.js"></script>
+  <script src="/static/vendor/ethers.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Compute Marketplace</h1>
+      <p class="muted">Rent distributed compute and use it through Kubernetes.</p>
+    </div>
+    <div class="wallet-area">
+      <span id="wallet-address" class="muted">Wallet not connected</span>
+      <button id="connect-wallet" type="button">Connect MetaMask</button>
+    </div>
+  </header>
+
+  <main>
+    {{if not .ContractConfigured}}
+    <div class="notice warning">
+      Marketplace contract is not configured. Set <code>RPC_URL</code> and <code>CONTRACT_ADDRESS</code> in the backend environment.
+    </div>
+    {{end}}
+
+    <section>
+      <div class="section-heading"><h2>Provider machines</h2><span class="muted">HTCondor live ClassAds · refreshes every 10 seconds</span></div>
+      <div id="node-list" hx-get="/partial/nodes" hx-trigger="load, every 10s" hx-swap="innerHTML">
+        <p class="muted">Loading HTCondor nodes…</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Publish compute</h2>
+      <p class="muted">Select an available provider machine and publish a fixed-duration rental offer.</p>
+      <form id="listing-form" class="form-grid">
+        <label>Provider machine
+          <select id="machine-name" required hx-get="/partial/node-options" hx-trigger="load, every 10s" hx-swap="innerHTML">
+            <option value="">Loading available machines…</option>
+          </select>
+        </label>
+        <label>Price (Sepolia ETH)
+          <input id="price-eth" type="number" min="0.000000000000000001" step="0.000000000000000001" value="0.001" required>
+        </label>
+        <label>Rental duration
+          <select id="duration-seconds">
+            <option value="3600">1 hour</option>
+            <option value="7200">2 hours</option>
+            <option value="86400">24 hours</option>
+          </select>
+        </label>
+        <button type="submit">Publish listing</button>
+      </form>
+      <p id="listing-message" class="message" role="status"></p>
+    </section>
+
+    <section>
+      <div class="section-heading"><h2>Available listings</h2><span class="muted">Read from Ethereum events</span></div>
+      <div id="listing-list" hx-get="/partial/listings" hx-trigger="load, every 7s" hx-swap="innerHTML">
+        <p class="muted">Waiting for on-chain listings…</p>
+      </div>
+      <p id="rental-message" class="message" role="status"></p>
+    </section>
+
+    <section>
+      <div class="section-heading"><h2>Recent rentals</h2><span class="muted">Rental IDs become Kubernetes Pod annotations</span></div>
+      <div id="rental-list" hx-get="/partial/rentals" hx-trigger="load, every 7s" hx-swap="innerHTML">
+        <p class="muted">No rentals observed yet.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Use a rental in Kubernetes</h2>
+      <p class="muted">After the rental event is indexed, copy its rental ID into the Pod annotation. See <code>examples/compute-pod.yaml</code>.</p>
+      <pre><code>metadata:
+  annotations:
+    marketplace.w3node.io/rental-id: "1"</code></pre>
+    </section>
+  </main>
+  <footer>
+    <span>W3Node 2026 prototype</span>
+    <span>Ethereum Sepolia · HTCondor · interLink · Kubernetes</span>
+  </footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>
