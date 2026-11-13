@@ -123,17 +123,25 @@ else
 fi
 
 step "interLink (SSH tunnel + API + virtual kubelet)"
+if [[ ! -x "${INTERLINK_DIR:-$HOME/src/interLink}/bin/interlink" ]]; then
+  echo "  interLink is not built yet; building it (first run only)"
+  "$ROOT/scripts/demo-laptop.sh" build-interlink >"$STATE/logs/build-interlink.log" 2>&1 || { tail -15 "$STATE/logs/build-interlink.log" >&2; die "interLink build failed"; }
+fi
 "$ROOT/scripts/demo-laptop.sh" connect >"$STATE/logs/connect.log" 2>&1 || { tail -15 "$STATE/logs/connect.log" >&2; die "connect failed (see $STATE/logs/connect.log)"; }
 wait_for "virtual node interlink-node Ready" 120 bash -c "[[ \$(kubectl --context $PROFILE get node interlink-node -o jsonpath='{.status.conditions[?(@.type==\"Ready\")].status}') == True ]]"
 wait_for "plugin reachable through the SSH tunnel" 30 curl -fs "http://127.0.0.1:${PLUGIN_LOCAL_PORT:-${PLUGIN_PORT:-4000}}/system-info"
 
 step "Grafana"
-wait_for "monitoring pods Ready" 240 kubectl --context "$PROFILE" -n monitoring wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana --timeout=5s
-if ! curl -fs -o /dev/null "http://127.0.0.1:$GRAFANA_PORT/login"; then
-  nohup kubectl --context "$PROFILE" -n monitoring port-forward svc/w3node-observability-grafana "$GRAFANA_PORT:80" >"$STATE/logs/pf-grafana.log" 2>&1 &
-  echo $! > "$STATE/pids/pf-grafana.pid"
+if kubectl --context "$PROFILE" -n monitoring get deploy w3node-observability-grafana >/dev/null 2>&1; then
+  wait_for "monitoring pods Ready" 240 kubectl --context "$PROFILE" -n monitoring wait --for=condition=Ready pod -l app.kubernetes.io/name=grafana --timeout=5s
+  if ! curl -fs -o /dev/null "http://127.0.0.1:$GRAFANA_PORT/login"; then
+    nohup kubectl --context "$PROFILE" -n monitoring port-forward svc/w3node-observability-grafana "$GRAFANA_PORT:80" >"$STATE/logs/pf-grafana.log" 2>&1 &
+    echo $! > "$STATE/pids/pf-grafana.pid"
+  fi
+  wait_for "Grafana at http://127.0.0.1:$GRAFANA_PORT" 60 curl -fs -o /dev/null "http://127.0.0.1:$GRAFANA_PORT/login"
+else
+  warn "Grafana is not installed yet. Run ./scripts/demo-laptop.sh monitoring once (see QUICKSTART), then re-run demo-up."
 fi
-wait_for "Grafana at http://127.0.0.1:$GRAFANA_PORT" 60 curl -fs -o /dev/null "http://127.0.0.1:$GRAFANA_PORT/login"
 
 step "Preflight"
 "$ROOT/scripts/demo-preflight.sh" && printf '\n\033[1;32mDemo stack is up in %ss.\033[0m\n' "$((SECONDS - T0))"
