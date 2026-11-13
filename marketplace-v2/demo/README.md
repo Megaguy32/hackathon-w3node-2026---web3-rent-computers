@@ -49,3 +49,15 @@ python3 demo/edit.py "<path to the OBS video printed at the end>" --target 60
 `--cleanup` deletes the cloned VM afterwards. `--stub-chain` is a development switch that skips the on-chain steps
 (it injects a test rental into the pool's local state); never use it for the real recording.
 Outputs go to `demo/out/` (git-ignored): `timeline.json` and the edited `demo-60s.mp4`.
+
+## Animated pitch scenes
+
+`demo/animation/` holds six animated pitch scenes (hook, problem, how it works, proof, why Web3/RWA, end card) as one HTML page driven by a time function, rendered deterministically to MP4 with headless Chromium and ffmpeg:
+
+```bash
+pip install selenium                       # plus chromium, chromedriver and ffmpeg on PATH
+python demo/animation/render.py --stills   # PNG stills for review
+python demo/animation/render.py            # one MP4 per scene + pitch-animation.mp4 (68 s) in demo/animation/out/
+```
+
+Open `scenes.html?scene=3&t=10` in a browser to preview any scene at any time. Every number on screen is one measured on the rehearsal stack.

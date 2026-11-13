@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Web3 Rent Computers: animated scenes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #0b0e17; --panel: #131827; --line: #2a3350; --text: #eef1fb; --mute: #8b95b5;
+    --blue: #4f8cff; --purple: #9b6bff; --green: #31d07f; --orange: #ffab40;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--text);
+    font-family: "Inter", "Noto Sans", "DejaVu Sans", system-ui, sans-serif; }
+  .scene { position: absolute; inset: 0; display: none; }
+  .scene.on { display: block; }
+  .grad { background: linear-gradient(90deg, var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .abs { position: absolute; }
+  .big { font-size: 78px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.08; }
+  .mid { font-size: 44px; font-weight: 700; letter-spacing: -.5px; }
+  .sub { font-size: 34px; color: var(--mute); font-weight: 500; }
+  .center { left: 0; right: 0; text-align: center; }
+  .card { background: var(--panel); border: 2px solid var(--line); border-radius: 22px; }
+  code, .mono { font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; }
+  svg { overflow: visible; }
+</style>
+</head>
+<body>
+
+<!-- 1. HOOK -->
+<div class="scene" id="s1">
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#4f8cff" stop-opacity=".55"/><stop offset="1" stop-color="#4f8cff" stop-opacity="0"/></radialGradient>
+      <linearGradient id="scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#9b6bff"/></linearGradient>
+    </defs>
+    <circle id="s1glow" cx="960" cy="400" r="420" fill="url(#glow)"/>
+    <g id="s1pc">
+      <rect x="800" y="250" width="320" height="200" rx="16" fill="#0f1424" stroke="#394468" stroke-width="5"/>
+      <rect id="s1scr" x="814" y="264" width="292" height="172" rx="8" fill="url(#scr)"/>
+      <rect x="944" y="450" width="32" height="46" fill="#394468"/>
+      <rect x="896" y="494" width="128" height="14" rx="7" fill="#394468"/>
+    </g>
+  </svg>
+  <div class="abs center big" id="s1t1" style="top:600px">Tonight, a computer near you<br><span class="grad">is sitting idle.</span></div>
+  <div class="abs center sub" id="s1t2" style="top:820px">And a developer nearby can't afford the cloud to build on it.</div>
+</div>
+
+<!-- 2. PROBLEM -->
+<div class="scene" id="s2">
+  <div class="abs mid" style="left:110px;top:80px">The problem</div>
+  <div class="abs card" style="left:110px;top:170px;width:820px;height:640px"></div>
+  <div class="abs card" style="left:990px;top:170px;width:820px;height:640px"></div>
+  <div class="abs mid" style="left:150px;top:200px;color:var(--orange)">Cloud compute</div>
+  <div class="abs mid" style="left:1030px;top:200px;color:var(--green)">Idle hardware, nearby</div>
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <!-- far data centre -->
+    <g id="s2dc" transform="translate(200,330)">
+      <rect width="130" height="40" rx="8" fill="#1b2340" stroke="#4a5686" stroke-width="3"/>
+      <rect y="50" width="130" height="40" rx="8" fill="#1b2340" stroke="#4a5686" stroke-width="3"/>
+      <rect y="100" width="130" height="40" rx="8" fill="#1b2340" stroke="#4a5686" stroke-width="3"/>
+      <circle cx="108" cy="20" r="6" fill="var(--orange)"/><circle cx="108" cy="70" r="6" fill="var(--orange)"/><circle cx="108" cy="120" r="6" fill="var(--orange)"/>
+    </g>
+    <text x="200" y="510" fill="#8b95b5" font-size="28">Data centre overseas</text>
+    <path id="s2path" d="M 340 400 C 480 400, 560 640, 770 640" fill="none" stroke="#4a5686" stroke-width="4" stroke-dasharray="3 14" stroke-linecap="round"/>
+    <circle id="s2pkt" r="11" fill="var(--orange)"/>
+    <!-- user -->
+    <g transform="translate(790,600)"><circle cx="0" cy="0" r="32" fill="#1b2340" stroke="#4a5686" stroke-width="3"/><circle cx="0" cy="-8" r="9" fill="#8b95b5"/><path d="M-16 18 q16 -22 32 0" fill="#8b95b5"/></g>
+    <text x="745" y="680" fill="#8b95b5" font-size="26">Developer</text>
+    <!-- idle PCs grid -->
+    <g id="s2grid"></g>
+  </svg>
+  <div id="s2tags" class="abs" style="left:150px;top:735px;width:740px;font-size:30px;color:var(--orange);display:flex;gap:26px;font-weight:600"></div>
+  <div class="abs center big" id="s2end" style="top:880px;font-size:62px">The hardware to fix it <span class="grad">already exists.</span></div>
+</div>
+
+<!-- 3. HOW IT WORKS -->
+<div class="scene" id="s3">
+  <div class="abs mid" style="left:110px;top:70px">How it works: <span class="grad">list, pay, run</span></div>
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080" id="s3svg">
+    <path id="s3rail" d="M 240 470 H 1680" stroke="#2a3350" stroke-width="6" fill="none"/>
+    <path id="s3lit" d="M 240 470 H 1680" stroke="url(#railg)" stroke-width="6" fill="none"/>
+    <defs><linearGradient id="railg" x1="0" x2="1"><stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#9b6bff"/></linearGradient></defs>
+    <circle id="s3dot" r="13" fill="#fff"/>
+  </svg>
+  <div id="s3nodes"></div>
+  <div class="abs card mono" id="s3code" style="left:360px;top:780px;width:1200px;padding:28px 40px;font-size:34px">
+    <span style="color:var(--mute)">$</span> kubectl apply -f pod.yaml
+    <div style="font-size:26px;color:var(--mute);margin-top:10px">annotation: marketplace.w3node.io/rental-id: "N"</div>
+  </div>
+  <div class="abs center mid" id="s3end" style="top:930px">Your existing Kubernetes workflow. <span class="grad">Pinned to exactly the machine you rented.</span></div>
+</div>
+
+<!-- 4. PROOF -->
+<div class="scene" id="s4">
+  <div class="abs mid" style="left:110px;top:80px">Not a mock-up. <span class="grad">Built and measured.</span></div>
+  <div id="s4grid"></div>
+  <div class="abs center sub" id="s4foot" style="top:940px">Prototype, working end to end on testnet.</div>
+</div>
+
+<!-- 5. WHY WEB3 / RWA -->
+<div class="scene" id="s5">
+  <div class="abs mid" style="left:110px;top:80px">Why Web3, and why <span class="grad">Real World Assets</span></div>
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <defs><linearGradient id="tok" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f8cff"/><stop offset="1" stop-color="#9b6bff"/></linearGradient></defs>
+    <g id="s5pc" transform="translate(280,330)">
+      <rect width="220" height="140" rx="12" fill="#0f1424" stroke="#394468" stroke-width="5"/>
+      <rect x="10" y="10" width="200" height="120" rx="6" fill="#1b2340"/>
+      <rect x="95" y="140" width="30" height="34" fill="#394468"/><rect x="60" y="172" width="100" height="12" rx="6" fill="#394468"/>
+    </g>
+    <text x="270" y="560" fill="#8b95b5" font-size="30">A real computer</text>
+    <path id="s5arrow1" d="M 560 400 H 760" stroke="#4a5686" stroke-width="5" fill="none" marker-end="url(#ah)"/>
+    <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#4a5686"/></marker></defs>
+    <g id="s5tok" transform="translate(860,300)">
+      <rect width="400" height="240" rx="26" fill="url(#tok)"/>
+      <text x="36" y="70" fill="#fff" font-size="30" font-weight="700">Listing on Ethereum</text>
+      <text x="36" y="130" fill="#e6ebff" font-size="34" class="mono">0.001 ETH / hour</text>
+      <text x="36" y="186" fill="#dfe5ff" font-size="26">set by the provider</text>
+    </g>
+    <text x="870" y="590" fill="#8b95b5" font-size="26">Illustrative</text>
+    <path id="s5arrow2" d="M 1290 420 H 1420" stroke="#4a5686" stroke-width="5" fill="none" marker-end="url(#ah)"/>
+    <g id="s5wallet" transform="translate(1480,340)">
+      <rect width="260" height="170" rx="22" fill="#131827" stroke="#31d07f" stroke-width="5"/>
+      <text x="130" y="95" text-anchor="middle" fill="#31d07f" font-size="34" font-weight="700">Provider</text>
+      <text x="130" y="135" text-anchor="middle" fill="#8b95b5" font-size="24">wallet</text>
+    </g>
+  </svg>
+  <div class="abs" id="s5pts" style="left:0;right:0;top:700px;text-align:center"></div>
+</div>
+
+<!-- 6. END CARD -->
+<div class="scene" id="s6">
+  <div class="abs center" id="s6a" style="top:250px;font-size:110px;font-weight:800;letter-spacing:-3px">Web3 <span class="grad">Rent Computers</span></div>
+  <div class="abs center mid" id="s6b" style="top:430px;font-size:54px">Rent a computer like you rent a room.</div>
+  <div class="abs center sub" id="s6c" style="top:560px">Ethereum records it. HTCondor schedules it. Kubernetes runs it.</div>
+  <div class="abs center mono" id="s6d" style="top:700px;font-size:32px;color:var(--blue)">github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers</div>
+  <div class="abs center sub" id="s6e" style="top:800px;font-size:30px">Next: escrow and uptime-based refunds &nbsp;·&nbsp; W3Node 2026 &nbsp;·&nbsp; Real World Assets</div>
+</div>
+
+<script>
+const clamp = (x, a=0, b=1) => Math.min(b, Math.max(a, x));
+const ease = x => { x = clamp(x); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x+2, 3)/2; };
+const seg = (t, a, b) => ease((t - a) / (b - a));
+const $ = id => document.getElementById(id);
+const show = (el, p, dy=24) => { el.style.opacity = p; el.style.transform = `translateY(${(1-p)*dy}px)`; };
+
+// scene durations in seconds
+const DUR = { 1: 6, 2: 12, 3: 20, 4: 12, 5: 10, 6: 8 };
+
+/* ---------- build static parts ---------- */
+// S2 grid of idle PCs
+(function(){
+  const g = $('s2grid'); let h = '';
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
+    const x = 1060 + c * 180, y = 300 + r * 150;
+    h += `<g class="pc2" data-i="${r*4+c}" transform="translate(${x},${y})">
+      <rect width="120" height="76" rx="8" fill="#101627" stroke="#39446a" stroke-width="3"/>
+      <rect class="scr2" x="8" y="8" width="104" height="60" rx="4" fill="#4f8cff"/>
+      <rect x="52" y="76" width="16" height="16" fill="#39446a"/><rect x="34" y="90" width="52" height="7" rx="3" fill="#39446a"/></g>`;
+  }
+  g.innerHTML = h;
+  $('s2tags').innerHTML = '<div id="t1">Far away</div><div id="t2">Billed in USD</div><div id="t3">Needs a card</div>';
+})();
+
+// S3 nodes
+const S3 = [
+  { x: 240,  t: 'Provider',        d: 'idle machine in the pool',   c: '#31d07f', icon: 'pc' },
+  { x: 600,  t: '1. List',         d: 'price and duration on Ethereum', c: '#4f8cff', icon: 'list' },
+  { x: 960,  t: '2. Pay',          d: 'wallet tap, straight to the owner', c: '#9b6bff', icon: 'coin' },
+  { x: 1320, t: '3. Pod',          d: 'with the rental ID',         c: '#4f8cff', icon: 'pod' },
+  { x: 1680, t: '4. Run',          d: 'on exactly that machine',    c: '#31d07f', icon: 'run' },
+];
+(function(){
+  let h = '';
+  S3.forEach((n, i) => {
+    h += `<div class="abs s3n" data-i="${i}" style="left:${n.x-150}px;top:340px;width:300px;text-align:center">
+      <div style="width:130px;height:130px;margin:0 auto;border-radius:34px;background:#131827;border:4px solid ${n.c};display:flex;align-items:center;justify-content:center;font-size:58px;box-shadow:0 0 40px ${n.c}55">${
+        {pc:'🖥️',list:'📋',coin:'◈',pod:'☸',run:'⚡'}[n.icon]}</div>
+      <div style="margin-top:62px;font-size:40px;font-weight:800;color:${n.c}">${n.t}</div>
+      <div style="font-size:26px;color:var(--mute);margin-top:6px;padding:0 10px">${n.d}</div></div>`;
+  });
+  $('s3nodes').innerHTML = h;
+})();
+
+// S4 badges
+const S4 = [
+  ['Live on Ethereum Sepolia', 'Real transactions, a deployed contract', '#4f8cff'],
+  ['2 real providers', 'A container and a KVM virtual machine', '#9b6bff'],
+  ['Job ran only on the rented machine', 'Confirmed by the pod logs and HTCondor history', '#31d07f'],
+  ['~25 s', 'for a new provider VM to boot and join the pool', '#ffab40'],
+  ['~15-20 s', 'from wallet confirmation to a usable rental', '#4f8cff'],
+  ['~97% CPU', 'on the rented VM under the demo workload', '#31d07f'],
+];
+(function(){
+  let h = '';
+  S4.forEach((b, i) => {
+    const x = 110 + (i % 3) * 600, y = 220 + Math.floor(i / 3) * 340;
+    const big = i < 3 ? '' : '';
+    h += `<div class="abs card s4b" data-i="${i}" style="left:${x}px;top:${y}px;width:560px;height:300px;padding:36px;border-color:${b[2]}">
+      <div style="font-size:${i<3?44:72}px;font-weight:800;color:${b[2]};line-height:1.1">${b[0]}</div>
+      <div style="font-size:28px;color:var(--mute);margin-top:18px;line-height:1.35">${b[1]}</div></div>`;
+  });
+  $('s4grid').innerHTML = h;
+})();
+
+// S5 points
+(function(){
+  const pts = ['No card.', 'No bank.', 'No middleman.'];
+  $('s5pts').innerHTML = pts.map((p,i)=>`<span class="s5p big" data-i="${i}" style="display:inline-block;margin:0 40px;font-size:72px">${p}</span>`).join('')
+    + '<div class="sub" id="s5foot" style="margin-top:34px">An idle computer becomes an income-producing asset.</div>';
+})();
+
+/* ---------- per-scene renderers ---------- */
+const R = {
+  1(t) {
+    const on = seg(t, .3, 1.8);
+    $('s1scr').style.opacity = on;
+    const pulse = .75 + .25 * Math.sin(t * 2.2);
+    $('s1glow').style.opacity = on * pulse;
+    $('s1pc').style.opacity = .35 + .65 * on;
+    show($('s1t1'), seg(t, 1.2, 2.4));
+    show($('s1t2'), seg(t, 3.0, 4.2));
+    $('s1').style.opacity = 1 - seg(t, 5.5, 6);
+  },
+  2(t) {
+    $('s2').style.opacity = 1 - seg(t, 11.5, 12);
+    // data centre -> user packet crawls slowly
+    const path = $('s2path'), L = path.getTotalLength();
+    const p = (t * 0.07) % 1;
+    const pt = path.getPointAtLength(p * L);
+    $('s2pkt').setAttribute('cx', pt.x); $('s2pkt').setAttribute('cy', pt.y);
+    $('s2path').style.opacity = seg(t, .2, 1);
+    ['t1','t2','t3'].forEach((id, i) => { const e = $(id); show(e, seg(t, 1.5 + i*1.1, 2.5 + i*1.1), 14); });
+    document.querySelectorAll('.pc2').forEach(el => {
+      const i = +el.dataset.i;
+      const appear = seg(t, 1 + i*0.15, 1.8 + i*0.15);
+      el.style.opacity = appear;
+      el.querySelector('.scr2').setAttribute('opacity', (.16 + .1 * Math.sin(t * 1.6 + i)).toFixed(3));
+    });
+    show($('s2end'), seg(t, 7.5, 9));
+  },
+  3(t) {
+    $('s3').style.opacity = 1 - seg(t, 19.5, 20);
+    const times = [0.8, 3.2, 6.0, 8.8, 11.6];
+    const vis = times.map(x => seg(t, x, x + .7));
+    document.querySelectorAll('.s3n').forEach(el => show(el, vis[+el.dataset.i], 18));
+    // lit rail and travelling dot follow the steps
+    const xs = S3.map(n => n.x);
+    let x = xs[0];
+    for (let i = 1; i < xs.length; i++) {
+      const q = seg(t, times[i] - 1.4, times[i] - .1);
+      if (q > 0) x = xs[i-1] + (xs[i] - xs[i-1]) * q;
+    }
+    const lit = $('s3lit'); lit.setAttribute('d', `M 240 470 H ${x}`);
+    $('s3dot').setAttribute('cx', x); $('s3dot').setAttribute('cy', 470);
+    $('s3dot').setAttribute('opacity', seg(t, .5, 1));
+    show($('s3code'), seg(t, 12.8, 13.8));
+    show($('s3end'), seg(t, 15.8, 17.2));
+  },
+  4(t) {
+    $('s4').style.opacity = 1 - seg(t, 11.5, 12);
+    document.querySelectorAll('.s4b').forEach(el => {
+      const i = +el.dataset.i; const p = seg(t, .5 + i*.9, 1.3 + i*.9);
+      el.style.opacity = p; el.style.transform = `scale(${.92 + .08*p})`;
+    });
+    show($('s4foot'), seg(t, 7.5, 8.5), 10);
+  },
+  5(t) {
+    $('s5').style.opacity = 1 - seg(t, 9.5, 10);
+    const set = (id, p) => $(id).style.opacity = p;
+    set('s5pc', seg(t, .3, 1.1)); set('s5arrow1', seg(t, 1.4, 2.0));
+    set('s5tok', seg(t, 2.0, 2.8)); set('s5arrow2', seg(t, 3.4, 4.0)); set('s5wallet', seg(t, 4.0, 4.8));
+    document.querySelectorAll('.s5p').forEach(el => show(el, seg(t, 5 + el.dataset.i*.7, 5.8 + el.dataset.i*.7), 14));
+    show($('s5foot'), seg(t, 7.4, 8.4), 10);
+  },
+  6(t) {
+    show($('s6a'), seg(t, .2, 1.2)); show($('s6b'), seg(t, 1.3, 2.2));
+    show($('s6c'), seg(t, 2.6, 3.4)); show($('s6d'), seg(t, 3.8, 4.6)); show($('s6e'), seg(t, 4.8, 5.6));
+  },
+};
+
+window.DUR = DUR;
+window.renderFrame = (scene, t) => {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('on'));
+  const s = $('s' + scene); s.classList.add('on'); R[scene](t);
+};
+// preview: ?scene=3&t=10, otherwise autoplay
+(function(){
+  const q = new URLSearchParams(location.search);
+  if (q.has('scene')) { renderFrame(+q.get('scene'), +(q.get('t') || 0)); return; }
+  if (q.has('render')) return;
+  let sc = 1, t0 = performance.now();
+  (function loop(now) {
+    const t = (now - t0) / 1000;
+    if (t > DUR[sc]) { sc = sc % 6 + 1; t0 = now; }
+    renderFrame(sc, (now - t0) / 1000); requestAnimationFrame(loop);
+  })(t0);
+})();
+</script>
+</body>
+</html>
