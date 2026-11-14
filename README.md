@@ -4,7 +4,9 @@
 A provider lists an idle machine on Ethereum, a consumer pays for it straight from a wallet, and a Kubernetes Pod runs on *exactly that machine*
 (Ethereum → interLink → HTCondor → Apptainer). Airbnb for idle computers, live on Sepolia today. W3Node 2026 Hackathon · Track: Real World Assets (RWA) · Ethan Le Roux (`Megaguy32`)
 
-> Demo video: _add link here_ · Quickstart: [QUICKSTART.md](QUICKSTART.md) · Concept: [CONCEPT.md](CONCEPT.md)
+[![Watch the 2:49 pitch video](marketplace-v2/docs/media/pitch-poster.jpg)](https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0)
+
+> **[Watch the pitch video (2:49)](https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0)** · Quickstart: [QUICKSTART.md](QUICKSTART.md) · Concept: [CONCEPT.md](CONCEPT.md)
 
 ## Why
 

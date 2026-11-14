@@ -78,7 +78,7 @@ Optional Grafana dashboard:
 ./scripts/demo-laptop.sh grafana
 ```
 
-See [docs/LOCAL_LAPTOP_DEMO.md](docs/LOCAL_LAPTOP_DEMO.md) for the full workflow, VM details, cleanup commands and troubleshooting. See [observability/README.md](observability/README.md) for what the dashboard measures and what it does not measure.
+See [LOCAL_LAPTOP_DEMO.md](LOCAL_LAPTOP_DEMO.md) for the full workflow, VM details, cleanup commands and troubleshooting. See [observability/README.md](../observability/README.md) for what the dashboard measures and what it does not measure.
 
 ## 1. Configure the HTCondor pool host
 

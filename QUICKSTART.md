@@ -1,5 +1,7 @@
 # Quickstart
 
+> Want to see it first? **[Watch the 2:49 pitch video](https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0)** (includes the 60 s live demo on Sepolia).
+
 Three paths, from cheapest to most complete.
 
 | Path | Time | Needs |

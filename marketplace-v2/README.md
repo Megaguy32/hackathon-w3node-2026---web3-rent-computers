@@ -4,7 +4,7 @@ A controlled hackathon prototype for renting real HTCondor compute through an Et
 through interLink. **Core proof:** a Kubernetes Pod with a marketplace rental ID is submitted through interLink, converted into an HTCondor job,
 pinned to the rented provider machine, and executed there with Apptainer.
 
-Start with the repo-level [QUICKSTART](../QUICKSTART.md). This page is the map of what is in here.
+Start with the repo-level [QUICKSTART](../QUICKSTART.md). This page is the map of what is in here. **[Pitch video (2:49) and 60 s live demo](https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0)**.
 
 ## Architecture
 
