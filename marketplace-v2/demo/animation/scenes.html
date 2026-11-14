@@ -128,6 +128,70 @@
   <div class="abs" id="s5pts" style="left:0;right:0;top:700px;text-align:center"></div>
 </div>
 
+
+<!-- 7. WHO IT'S FOR -->
+<div class="scene" id="s7">
+  <div class="abs mid" style="left:110px;top:80px">Who it's for: <span class="grad">builders across Africa</span></div>
+  <div class="abs card" id="s7a" style="left:110px;top:240px;width:800px;height:430px;padding:44px;border-color:var(--green)">
+    <div style="font-size:46px;font-weight:800;color:var(--green)">Providers</div>
+    <div class="sub" style="margin-top:8px;font-size:30px">Earn from hardware that sits idle</div>
+    <div style="margin-top:44px;font-size:36px;line-height:1.5">
+      <div class="s7i" data-s="a">PC and gaming-rig owners</div>
+      <div class="s7i" data-s="a">University and school labs</div>
+      <div class="s7i" data-s="a">Internet cafes and small offices</div>
+    </div>
+  </div>
+  <div class="abs card" id="s7b" style="left:1010px;top:240px;width:800px;height:430px;padding:44px;border-color:var(--blue)">
+    <div style="font-size:46px;font-weight:800;color:var(--blue)">Renters</div>
+    <div class="sub" style="margin-top:8px;font-size:30px">Compute without a credit card</div>
+    <div style="margin-top:44px;font-size:36px;line-height:1.5">
+      <div class="s7i" data-s="b">Local developers and student teams</div>
+      <div class="s7i" data-s="b">Startups and research groups</div>
+      <div class="s7i" data-s="b">Cluster admins adding cheap capacity</div>
+    </div>
+  </div>
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080"><g id="s7arrow">
+    <path d="M 925 455 H 995" stroke="#4a5686" stroke-width="6" fill="none" marker-end="url(#ah7)"/>
+    <defs><marker id="ah7" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#4a5686"/></marker></defs>
+    <text x="960" y="425" text-anchor="middle" fill="#8b95b5" font-size="26">ETH</text></g></svg>
+  <div class="abs center big" id="s7end" style="top:780px;font-size:62px">No credit card. <span class="grad">Just a wallet.</span></div>
+</div>
+
+<!-- 8. UNDER THE HOOD -->
+<div class="scene" id="s8">
+  <div class="abs mid" style="left:110px;top:80px">Under the hood: <span class="grad">a rental ID becomes a running job</span></div>
+  <div id="s8boxes"></div>
+  <svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080">
+    <path id="s8rail" d="M 230 330 H 1690" stroke="#2a3350" stroke-width="5" fill="none"/>
+    <circle id="s8dot" r="12" fill="#fff"/>
+  </svg>
+  <div class="abs center mid" id="s8end" style="top:840px">Rental ID in. <span class="grad">Job on exactly that machine out.</span></div>
+</div>
+
+<!-- 9. ROADMAP -->
+<div class="scene" id="s9">
+  <div class="abs mid" style="left:110px;top:80px">Working today. <span class="grad">Heading to a full marketplace.</span></div>
+  <div class="abs card" id="s9a" style="left:110px;top:230px;width:800px;height:470px;padding:44px;border-color:var(--green)">
+    <div style="font-size:46px;font-weight:800;color:var(--green)">Today</div>
+    <div style="margin-top:34px;font-size:34px;line-height:1.6">
+      <div class="s9i" data-s="a">Live on Ethereum Sepolia</div>
+      <div class="s9i" data-s="a">Direct wallet payment to the provider</div>
+      <div class="s9i" data-s="a">Job pinned to the rented machine</div>
+      <div class="s9i" data-s="a">Live marketplace and Grafana views</div>
+    </div>
+  </div>
+  <div class="abs card" id="s9b" style="left:1010px;top:230px;width:800px;height:470px;padding:44px;border-color:var(--purple)">
+    <div style="font-size:46px;font-weight:800;color:var(--purple)">Next</div>
+    <div style="margin-top:34px;font-size:34px;line-height:1.6">
+      <div class="s9i" data-s="b">Escrowed payment</div>
+      <div class="s9i" data-s="b">Uptime-based refunds</div>
+      <div class="s9i" data-s="b">An ERC-721 token per machine</div>
+      <div class="s9i" data-s="b">Proof of machine ownership</div>
+    </div>
+  </div>
+  <div class="abs center sub" id="s9end" style="top:790px;font-size:44px;color:var(--text)">Hardware that earns. On-chain.</div>
+</div>
+
 <!-- 6. END CARD -->
 <div class="scene" id="s6">
   <div class="abs center" id="s6a" style="top:250px;font-size:110px;font-weight:800;letter-spacing:-3px">Web3 <span class="grad">Rent Computers</span></div>
@@ -145,7 +209,8 @@ const $ = id => document.getElementById(id);
 const show = (el, p, dy=24) => { el.style.opacity = p; el.style.transform = `translateY(${(1-p)*dy}px)`; };
 
 // scene durations in seconds
-const DUR = { 1: 6, 2: 12, 3: 20, 4: 12, 5: 10, 6: 8 };
+const DUR = { 1: 6, 2: 12, 3: 20, 4: 12, 5: 10, 6: 8, 7: 16, 8: 20, 9: 16 };
+const ORIG = Object.assign({}, DUR);  // designed durations; DUR may be overridden to stretch a scene to the voiceover
 
 /* ---------- build static parts ---------- */
 // S2 grid of idle PCs
@@ -208,6 +273,22 @@ const S4 = [
   const pts = ['No card.', 'No bank.', 'No middleman.'];
   $('s5pts').innerHTML = pts.map((p,i)=>`<span class="s5p big" data-i="${i}" style="display:inline-block;margin:0 40px;font-size:72px">${p}</span>`).join('')
     + '<div class="sub" id="s5foot" style="margin-top:34px">An idle computer becomes an income-producing asset.</div>';
+})();
+
+
+// S8 boxes
+const S8 = [
+  ['Ethereum contract', 'Listings, prices and rentals live on-chain', '#4f8cff'],
+  ['Marketplace indexer', 'Reads the rental event and serves the live view', '#9b6bff'],
+  ['interLink virtual node', 'Kubernetes sees the rented machine as a node', '#4f8cff'],
+  ['HTCondor plugin', 'Validates the rental and pins the job to the machine', '#9b6bff'],
+  ['Apptainer container', 'Runs on the rented computer; logs flow back', '#31d07f'],
+];
+(function(){
+  $('s8boxes').innerHTML = S8.map((b, i) => `<div class="abs card s8b" data-i="${i}" style="left:${70 + i*365}px;top:400px;width:320px;height:330px;padding:30px;border-color:${b[2]}">
+    <div style="font-size:26px;color:${b[2]};font-weight:800">${i+1}</div>
+    <div style="font-size:34px;font-weight:800;margin-top:6px;line-height:1.15">${b[0]}</div>
+    <div style="font-size:24px;color:var(--mute);margin-top:14px;line-height:1.35">${b[1]}</div></div>`).join('');
 })();
 
 /* ---------- per-scene renderers ---------- */
@@ -273,6 +354,39 @@ const R = {
     document.querySelectorAll('.s5p').forEach(el => show(el, seg(t, 5 + el.dataset.i*.7, 5.8 + el.dataset.i*.7), 14));
     show($('s5foot'), seg(t, 7.4, 8.4), 10);
   },
+  7(t) {
+    $('s7').style.opacity = 1 - seg(t, 15.5, 16);
+    show($('s7a'), seg(t, .3, 1.1)); show($('s7b'), seg(t, 4.6, 5.4));
+    document.querySelectorAll('.s7i').forEach((el, i) => {
+      const k = i % 3, base = el.dataset.s === 'a' ? 1.3 : 5.6;
+      show(el, seg(t, base + k*.8, base + k*.8 + .7), 12);
+    });
+    $('s7arrow').style.opacity = seg(t, 8.4, 9.2);
+    show($('s7end'), seg(t, 10.5, 12));
+  },
+  8(t) {
+    $('s8').style.opacity = 1 - seg(t, 19.5, 20);
+    const times = [.8, 3.4, 6.0, 8.6, 11.2];
+    document.querySelectorAll('.s8b').forEach(el => {
+      const i = +el.dataset.i; const p = seg(t, times[i], times[i] + .7);
+      el.style.opacity = p; el.style.transform = `translateY(${(1-p)*18}px)`;
+    });
+    const xs = [230, 595, 960, 1325, 1690];
+    let x = xs[0];
+    for (let i = 1; i < xs.length; i++) { const q = seg(t, times[i] - 1.5, times[i] - .1); if (q > 0) x = xs[i-1] + (xs[i]-xs[i-1]) * q; }
+    $('s8dot').setAttribute('cx', x); $('s8dot').setAttribute('cy', 330); $('s8dot').setAttribute('opacity', seg(t, .6, 1.2));
+    $('s8rail').style.opacity = seg(t, .3, 1);
+    show($('s8end'), seg(t, 14.5, 16));
+  },
+  9(t) {
+    $('s9').style.opacity = 1 - seg(t, 15.5, 16);
+    show($('s9a'), seg(t, .3, 1.1)); show($('s9b'), seg(t, 6.0, 6.8));
+    document.querySelectorAll('.s9i').forEach((el, i) => {
+      const k = i % 4, base = el.dataset.s === 'a' ? 1.3 : 7.0;
+      show(el, seg(t, base + k*.9, base + k*.9 + .7), 12);
+    });
+    show($('s9end'), seg(t, 12, 13.5), 10);
+  },
   6(t) {
     show($('s6a'), seg(t, .2, 1.2)); show($('s6b'), seg(t, 1.3, 2.2));
     show($('s6c'), seg(t, 2.6, 3.4)); show($('s6d'), seg(t, 3.8, 4.6)); show($('s6e'), seg(t, 4.8, 5.6));
@@ -281,6 +395,7 @@ const R = {
 
 window.DUR = DUR;
 window.renderFrame = (scene, t) => {
+  t = t * ORIG[scene] / DUR[scene];  // stretch the whole scene (animation, holds, fade-out) to its current duration
   document.querySelectorAll('.scene').forEach(s => s.classList.remove('on'));
   const s = $('s' + scene); s.classList.add('on'); R[scene](t);
 };
@@ -292,7 +407,7 @@ window.renderFrame = (scene, t) => {
   let sc = 1, t0 = performance.now();
   (function loop(now) {
     const t = (now - t0) / 1000;
-    if (t > DUR[sc]) { sc = sc % 6 + 1; t0 = now; }
+    if (t > DUR[sc]) { sc = sc % 9 + 1; t0 = now; }
     renderFrame(sc, (now - t0) / 1000); requestAnimationFrame(loop);
   })(t0);
 })();

@@ -74,3 +74,16 @@ python demo/annotate.py --no-zoom  # same rings and captions, full 2x2 view -> d
 ```
 
 Ring coordinates are in source pixels of the 1920x1200 recording; adjust them in `build_story()` if you re-record with a different layout.
+
+## The final pitch video
+
+The submitted video ([release v1.0.0](https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0)) is built from three pieces, all reproducible from this folder:
+
+1. **Animated scenes**: `animation/render.py --scenes 1,2,3,4,5,6 --durations "1=10,2=18.5,3=32.9,4=18.8,5=16.3,6=9.5"`. Scenes stretch to fit the voiceover.
+   Extra scenes (7 who it's for, 8 under the hood, 9 roadmap) are included but not used in the final cut.
+2. **The recorded demo with annotations**: `annotate.py --no-zoom` (see above).
+3. **Voiceover**: 13 clips, one per script section, cut from a single read-through.
+   `assemble.py --voice-dir <dir> --prefix w3node- --prenormalised --out out/pitch-final.mp4` lays each clip at its place in the timeline,
+   holds the last demo frame so the narration can finish, and mixes the voice. Use `--no-voice` for a silent cut.
+
+`assemble.py` expects the scene clips in `animation/out/` and `out/demo-60s-annotated-nozoom.mp4`.

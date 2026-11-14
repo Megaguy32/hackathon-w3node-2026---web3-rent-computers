@@ -2,7 +2,7 @@
 """Render the animated pitch scenes (scenes.html) to MP4, deterministically, frame by frame.
 
   python demo/animation/render.py --stills            # a few PNG stills per scene for review
-  python demo/animation/render.py                      # one MP4 per scene + pitch-animation.mp4 (all scenes)
+  python demo/animation/render.py                      # one MP4 per scene + pitch-animation.mp4 (scenes in ORDER, no end card)
   python demo/animation/render.py --scene 3            # just one scene
 
 Needs: chromium + chromedriver, ffmpeg, python `selenium`. Output goes to demo/animation/out/.
@@ -15,7 +15,9 @@ from selenium.webdriver.chrome.options import Options
 HERE = Path(__file__).resolve().parent
 OUT = HERE / "out"
 FPS = 30
-NAMES = {1: "hook", 2: "problem", 3: "how-it-works", 4: "proof", 5: "why-web3-rwa", 6: "end-card"}
+NAMES = {1: "hook", 2: "problem", 3: "how-it-works", 4: "proof", 5: "why-web3-rwa", 6: "end-card", 7: "who-its-for", 8: "under-the-hood", 9: "roadmap"}
+# animation order (the end card is placed after the recorded demo by assemble.py)
+ORDER = [1, 2, 7, 3, 8, 4, 5, 9]
 
 
 def driver():
@@ -52,13 +54,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stills", action="store_true")
     ap.add_argument("--scene", type=int)
+    ap.add_argument("--scenes", help="comma list of scenes to render (no combined file)")
+    ap.add_argument("--durations", help="override scene lengths in seconds, e.g. 1=10,2=18.5 (scenes stretch to fit)")
     a = ap.parse_args()
     OUT.mkdir(exist_ok=True)
     d = driver()
     try:
+        if a.durations:
+            over = {k.strip(): float(v) for k, v in (kv.split("=") for kv in a.durations.split(","))}
+            d.execute_script("Object.assign(DUR, arguments[0])", over)
         dur = d.execute_script("return DUR")
         dur = {int(k): v for k, v in dur.items()}
-        scenes = [a.scene] if a.scene else sorted(dur)
+        scenes = [a.scene] if a.scene else [int(x) for x in a.scenes.split(",")] if a.scenes else sorted(dur)
         if a.stills:
             (OUT / "stills").mkdir(exist_ok=True)
             for s in scenes:
@@ -66,10 +73,10 @@ def main():
                     t = dur[s] * frac
                     (OUT / "stills" / f"s{s}-{int(frac*100)}.png").write_bytes(shot(d, s, t))
             print("stills in", OUT / "stills"); return
-        files = [render_scene(d, s, dur[s]) for s in scenes]
-        if not a.scene:
+        rendered = {s: render_scene(d, s, dur[s]) for s in scenes}
+        if not a.scene and not a.scenes:
             lst = OUT / "concat.txt"
-            lst.write_text("".join(f"file '{f.name}'\n" for f in files))
+            lst.write_text("".join(f"file '{rendered[s].name}'\n" for s in ORDER))
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy",
                             str(OUT / "pitch-animation.mp4")], check=True)
             lst.unlink()

@@ -38,4 +38,4 @@ The working version runs end to end on Ethereum Sepolia with real virtual machin
 ## Links
 
 - Repository: https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers
-- Demo video: _add link here_
+- Pitch video (2:49) and 60 s live demo: https://github.com/Megaguy32/hackathon-w3node-2026---web3-rent-computers/releases/tag/v1.0.0
